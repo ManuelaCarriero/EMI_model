@@ -16,5 +16,5 @@ You must run programmes in the following order:
        2. Computes GLM corrected for CSF and WM PVEs, with samples as the medias across subjects;
        3. GLM for each subject;
    * Analysis across subjects
-       5. for each region;
-       6. GLM considering GM medians of each subject as samples.
+       1. for each region;
+       2. GLM considering GM medians of each subject as samples.
