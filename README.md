@@ -11,10 +11,10 @@ You must run programmes in the following order:
 1. **compute_medians.m**: this programme computes medians of parametric maps and means of PVEs maps;
 2. **select_medians.m**: this programme selects medians whose labels are survived between functional and diffusion spaces and among subjects;
 3. **analyze_medians.m**: this programme makes all the statistical analysis, so it is divided in the following parts:
-   Analysis across regions:
+   * Analysis across regions:
        1. it computes the medians across subjects and removes the regions whose resulting values is nan;
        2. Computes GLM corrected for CSF and WM PVEs, with samples as the medias across subjects;
        3. GLM for each subject;
-   Analysis across subjects
-       4. for each region;
-       5. GLM considering GM medians of each subject as samples.
+   * Analysis across subjects
+       5. for each region;
+       6. GLM considering GM medians of each subject as samples.
