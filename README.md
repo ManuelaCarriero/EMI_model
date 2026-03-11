@@ -1,6 +1,8 @@
 # EMI_model
 This repository stores processing codes for the brain energy consumption vs microstructure project.
 
+## HOW TO USE
+git clone 
 
 ## main "parts of the body of the project"
 
