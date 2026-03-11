@@ -1,9 +1,9 @@
 %% This programme compute parametric medians to be analyzed in analyze_medians.m
 
 %% select which type of masking apply
-rois = 'not complete'; %without any kind of masking, otherwise choose 'complete'  
+rois = 'not complete'; %with some kind of masking, otherwise choose 'complete'  
 masking = 'GM'; %masking only by GM, otherwise choose 'all'
-mse_threshold = 'yes';
+mse_threshold = 'yes';%if yes, you need the MSE map.
 mse_threshold_value=85;
 
 %pve_1 = GM,
@@ -13,7 +13,9 @@ mse_threshold_value=85;
 pve_1_threshold=0.5;
 
 fsoma_threshold=0.15;
-%%
+
+%% these parameters must be chosen, but their relative masking will not be used in case you have chosen masking='GM' 
+
 %change these thresholds values between 0.1 and 1
 pve_0_threshold_func=1;%threshold before which the CSF is set to 0
 pve_2_threshold_func=1;
@@ -24,6 +26,9 @@ pve_2_threshold_dwi=1;%
 rsoma_upper_limit=7; %7 micrometer is good for WAND data.%11.1 for Chieti
 
 %% load data
+
+%% load subjects file
+
 % load subjs idx
 %run='run-01';
 subjects = importdata(strcat('/home/c25078236/Desktop/WAND_data/subjects.txt'));
@@ -33,8 +38,11 @@ subjects(subjects==20609)=[];%subj that does not have M0
 subjects(subjects==69881)=[];%subj that does not have SANDI MAPS
 n_subjs=length(subjects);
 start_subj=1;
-%%
-%load pve on subj space
+
+%% load MAPS
+
+%% load pve on subj space
+
 V_pves_0_dwi={};
 V_pves_1_dwi={};
 V_pves_2_dwi={};
@@ -107,8 +115,8 @@ end
 % 
 % V_refined = V_pves_0_dwi_first.*V_pves_1_dwi_first;
 % figure, imagesc(V_refined(:,:,45))
-%%
-%load atlas on subj space
+
+%% load atlas on subj space
 V_atlases_dwi={};
 V_atlases_func={};
 
@@ -239,7 +247,7 @@ end
 
 
 
-%% number of cells density map (many subjects) 
+%% calculate number of cells density map (many subjects) 
 
 V_fc_maps={};
 
@@ -322,15 +330,16 @@ title('Numerical soma density')
 % clim([10^12,10^14])
 
 %a further method to remove hyperintensities: look at the MSE.
-%% save as nifti
-img_path='/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-97902/SANDI_Output/SANDI-fit_Rsoma.nii.gz';
-hdr=niftiinfo(img_path);
-hdr.Datatype = 'double';
-one_subj_fc=V_fc_maps{1};
-hdr.ImageSize = size(one_subj_fc);
-niftiwrite(one_subj_fc,'/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/261104/one_subj_fc.nii.gz',hdr,"Compressed",true);
 
-%% superficial density (many subjects)
+%% save fc as nifti
+% img_path='/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-97902/SANDI_Output/SANDI-fit_Rsoma.nii.gz';
+% hdr=niftiinfo(img_path);
+% hdr.Datatype = 'double';
+% one_subj_fc=V_fc_maps{1};
+% hdr.ImageSize = size(one_subj_fc);
+% niftiwrite(one_subj_fc,'/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/261104/one_subj_fc.nii.gz',hdr,"Compressed",true);
+
+%% calculate superficial density (many subjects)
 
 V_fsup_maps={};
 
@@ -426,29 +435,33 @@ regions = unique(V_atlas_tot(:));
 regions(1)=[];
 n_regions=numel(regions);
 
-%%
-%atlas for church glass images
+%% in case you don't have the original atlas
+n_regions=166;%it is needed to built the empty matrix (you need to know the maximum length. If it's higher, it isn't a problem).
+
+%% load atlas for "church" glass images
+% save V_atlas_glass. This will be used in analyze_medians.m to save
+%correlation maps across subjects for each region.
+
 img_path_atlas='/home/c25078236/Desktop/saved_workspace/atlas_to_send/AAL3v1_2mm_resampled.nii.gz';
 Vhdr = spm_vol(img_path_atlas);
 V_atlas_glass = spm_read_vols(Vhdr);
 
-%% in case you don't have the original atlas
-n_regions=166;%it is needed to built the empty matrix (you need to know the maximum length. If it's higher, it isn't a problem).
 
 %% compute medians 
 %prepare empty matrices with maximum size 
 %so to not have problems of different size
-%then take the common regions (intersection): 
+
+%then select_medians.m takes the common regions (intersection): 
 %1. first keep the common regions across subjects;
 %2. then keep the common regions across spaces (func and dwi)
-
 %you can loose some labels (?) when warping in subject space
 %so for each space and for each subject I checked which labels we have
+
 labels_func_subjs = zeros(n_subjs,n_regions);
 labels_dwi_subjs = zeros(n_subjs,n_regions);
 
 medians_CMRO2_subjs = zeros(n_subjs,n_regions);
-% medians_CBF_subjs = zeros(n_subjs,n_regions);
+
 
 medians_rsoma_subjs = zeros(n_subjs,n_regions);
 medians_fsoma_subjs = zeros(n_subjs,n_regions);
@@ -460,18 +473,17 @@ medians_fextra_subjs = zeros(n_subjs,n_regions);
 medians_Din_subjs = zeros(n_subjs,n_regions);
 medians_De_subjs = zeros(n_subjs,n_regions);
 
+%%%%%%%%%%%%%%%these were to check functional and microstructural medians variability
+%(NOT USED ANYMORE for the analysis but are anyway calculated)
 percentage_zeros_CMRO2_subjs = zeros(n_subjs,n_regions);
-%percentage_unphysical_CBF_subjs = zeros(n_subjs,n_regions); 
 percentage_nans_CMRO2_subjs = zeros(n_subjs,n_regions);
-%percentage_nans_CBF_subjs = zeros(n_subjs,n_regions); 
+
 percentage_high_MSE_microparameter_subjs = zeros(n_subjs,n_regions); 
 percentage_high_MSE_rsoma_subjs = zeros(n_subjs,n_regions);
-
-
 medians_mse_subjs = zeros(n_subjs,n_regions); %MSE
 medians_mse_rsoma_subjs = zeros(n_subjs,n_regions); %MSE
-
 percentage_nans_rsoma_subjs = zeros(n_subjs,n_regions);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 V_pve_0_func_mean_subjs = zeros(n_subjs,n_regions);
 V_pve_1_func_mean_subjs = zeros(n_subjs,n_regions);
@@ -501,9 +513,12 @@ means_pve_0_func_GM_subjs = [];
 means_pve_1_func_GM_subjs = [];
 means_pve_2_func_GM_subjs = [];
 
-means_pve_0_dwi_GM_subjs = []; %attention: if you want the same analysis also for Rsoma, you have to consider .V_GM.*V_fs 
+means_pve_0_dwi_GM_subjs = []; 
 means_pve_1_dwi_GM_subjs = [];
 means_pve_2_dwi_GM_subjs = [];
+
+% attention: if you want the same analysis also for Rsoma, 
+% you have to consider .V_GM.*V_fs 
 
 start_time=tic;
 for subj = 1:n_subjs
@@ -522,7 +537,6 @@ for subj = 1:n_subjs
 
     %load parametric maps
     V_CMRO2 = V_CMRO2_maps{subj};
-    % V_CBF = V_CBF_maps{subj};
 
     V_rsoma = V_rsoma_maps{subj};
     V_fsoma = V_fsoma_maps{subj};
@@ -535,7 +549,7 @@ for subj = 1:n_subjs
     V_fextra = V_fextra_maps{subj};
 
 
-    %where to save parametric medians and PVE means
+    %where to save parametric medians and PVE means for each subj
     medians_CMRO2_subj = [];
     medians_CBF_subj = [];
     medians_rsoma_subj = [];
@@ -551,11 +565,8 @@ for subj = 1:n_subjs
     labels_func_subj = [];
     labels_dwi_subj = [];
 
-    %percentage_unphysical_CBF_subj = [];
     percentage_zeros_CMRO2_subj = []; 
-    %percentage_nans_CBF_subj = [];
     percentage_nans_CMRO2_subj = []; 
-
     percentage_nans_rsoma_subj=[]; 
 
     V_pve_0_func_mean_subj = [];
@@ -579,6 +590,7 @@ for subj = 1:n_subjs
     end
 
     %%%%FUNC SPACE
+    
     V_pve_0_func_original = V_pve_0_func;
     V_pve_1_func_original = V_pve_1_func;
     V_pve_2_func_original = V_pve_2_func;
@@ -641,14 +653,11 @@ for subj = 1:n_subjs
     %mask
 
     V_CMRO2_masked = V_CMRO2.*V_mask_func;
-    % V_CBF_masked = V_CBF.*V_mask_func;
-
-   
     
     %remove background
     mask_func_zeros = find(V_mask_func==0);
     V_CMRO2_masked(mask_func_zeros)=[];
-    % V_CBF_masked(mask_func_zeros)=[];
+
 
 
     %%%%%%%%%count how many zeros and NaN inside the regions 
@@ -669,25 +678,9 @@ for subj = 1:n_subjs
     percentage_nans_CMRO2=n_CMRO2_nans/n_CMRO2_region_voxels_tot;
     percentage_nans_CMRO2_subj(end+1)=percentage_nans_CMRO2;
 
-%     %count number of values lower or equal to zero in CBF region
-%     CBF_unphysical = find(V_CBF_masked<=0);    
-%     %count how many voxels we remove
-%     n_CBF_region_voxels_tot = numel(V_CBF_masked);
-%     n_CBF_unphysical = numel(CBF_unphysical);
-%     percentage_unphysical_CBF = n_CBF_unphysical/n_CBF_region_voxels_tot*100;
-%     percentage_unphysical_CBF_subj(end+1)=percentage_unphysical_CBF;   
-% 
-% %     V_CBF_masked(CBF_unphysical)=[]; you have to keep them
-% 
-%     %count number of values lower or equal to NaNs in CBF region
-%     CBF_nans=find(isnan(V_CBF_masked));
-%     n_CBF_nans=length(CBF_nans);
-%     percentage_nans_CBF=n_CBF_nans/n_CBF_region_voxels_tot;
-%     percentage_nans_CBF_subj(end+1)=percentage_nans_CBF;
 
     %%%%%%%%%compute medians
     medians_CMRO2_subj(end+1) = nanmedian(V_CMRO2_masked);
-    % medians_CBF_subj(end+1) = nanmedian(V_CBF_masked);
 
     %debugging
     % if isnan(medians_CMRO2_subj)
@@ -725,12 +718,10 @@ for subj = 1:n_subjs
         
     medians_CMRO2_subjs(subj,1:n_regions_func) = medians_CMRO2_subj;
 
-    % medians_CBF_subjs(subj,1:n_regions_func) = medians_CBF_subj;
     labels_func_subjs(subj,1:n_regions_func) = labels_func_subj;
+   
     percentage_zeros_CMRO2_subjs(subj,1:n_regions_func) = percentage_zeros_CMRO2_subj;
-    % percentage_unphysical_CBF_subjs(subj,1:n_regions_func) = percentage_unphysical_CBF_subj;
     percentage_nans_CMRO2_subjs(subj,1:n_regions_func) = percentage_nans_CMRO2_subj;
-    % percentage_nans_CBF_subjs(subj,1:n_regions_func) = percentage_nans_CBF_subj;
 
     V_pve_0_func_mean_subjs(subj,1:n_regions_func) = V_pve_0_func_mean_subj;
     V_pve_1_func_mean_subjs(subj,1:n_regions_func) = V_pve_1_func_mean_subj;
