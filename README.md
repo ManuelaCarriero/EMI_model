@@ -16,5 +16,5 @@ You must run programmes in the following order:
        2. Computes GLM corrected for CSF and WM PVEs, with samples as the medias across subjects;
        3. GLM for each subject;
    * Analysis across subjects
-       1. for each region;
+       1. for each region: it computes the brain correlation map (i.e. correlation value for each brain region);
        2. GLM considering GM medians of each subject as samples.
