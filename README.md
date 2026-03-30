@@ -18,3 +18,5 @@ You must run programmes in the following order:
    * Analysis across subjects
        1. for each region: it computes the brain correlation map (i.e. correlation value for each brain region);
        2. GLM considering GM medians of each subject as samples.
+4. **analyze_medians_partII.m**.
+5. **collocate_medians**.
