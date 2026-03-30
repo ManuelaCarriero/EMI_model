@@ -3,11 +3,13 @@
 %have lost some labels, so this programme select only common labels).
 
 %% load data already "cooked"
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking')
+load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions')
 
 %% select variables to examine
 energy_parameter = 'CMRO2';
-micro_parameter = 'fsup';
+micro_parameter = 'fc';
 
 %% remove uncommon labels between subjects and between spaces
 %% select matrices
@@ -128,6 +130,15 @@ for row = 1:n_subjs
     V_pve_2_dwi_mean_subjs_final(row,:)=V_pve_2_dwi_mean_subjs_row_final;
 end
 
+%n voxels
+n_voxels_dwi_final=[];
+for row = 1:n_subjs
+    n_voxels_dwi_row=n_voxels_dwi(row,:);
+    lst_idx = lst_idx_matrix_dwi(row,:);
+    n_voxels_dwi_row_final=n_voxels_dwi_row(lst_idx);
+    n_voxels_dwi_final(row,:)=n_voxels_dwi_row_final;
+end
+
 %% if you have MSE
 % %these matrices are needed to check if at higher variability correspond
 % %high mse median regional values.
@@ -245,6 +256,14 @@ for row = 1:n_subjs
     V_pve_2_func_mean_subjs_final(row,:)=V_pve_2_func_mean_subjs_row_final;
 end
 
+%n voxels
+n_voxels_func_final=[];
+for row = 1:n_subjs
+    n_voxels_func_row=n_voxels_func(row,:);
+    lst_idx = lst_idx_matrix_func(row,:);
+    n_voxels_func_row_final=n_voxels_func_row(lst_idx);
+    n_voxels_func_final(row,:)=n_voxels_func_row_final;
+end
 % %percentage of zeros in the different regions of different subjects
 % percentage_zeros_CMRO2_subjs_final=[];
 % for row = 1:n_subjs
@@ -360,6 +379,17 @@ for row = 1:n_subjs
     V_pve_2_dwi_mean_subjs_row_final=V_pve_2_dwi_mean_subjs_row(lst_idx);
     V_pve_2_dwi_mean_subjs_final_spaces(row,:)=V_pve_2_dwi_mean_subjs_row_final;
 end
+
+%n voxels 
+n_voxels_dwi_row_final_spaces=[];
+for row = 1:n_subjs
+    n_voxels_dwi_row=n_voxels_dwi_final(row,:);
+    lst_idx = lst_idx_matrix_dwi_spaces(row,:);
+    n_voxels_dwi_row_final=n_voxels_dwi_row(lst_idx);
+    n_voxels_dwi_row_final_spaces(row,:)=n_voxels_dwi_row_final;
+end
+
+
 %% if you have MSE
 % if strcmp(micro_parameter,'Rsoma')    
 %     medians_mse_rsoma_subjs_final_spaces=[];
@@ -457,6 +487,16 @@ for row = 1:length(V_pve_2_func_mean_subjs_final(:,1))
     V_pve_2_func_mean_subjs_final_spaces(row,:)=V_pve_2_func_mean_subjs_row_final;
 end
 
+% n voxels
+n_voxels_func_row_final_spaces=[];
+for row = 1:n_subjs
+    n_voxels_func_row=n_voxels_func_final(row,:);
+    lst_idx = lst_idx_matrix_func_spaces(row,:);
+    n_voxels_func_row_final=n_voxels_func_row(lst_idx);
+    n_voxels_func_row_final_spaces(row,:)=n_voxels_func_row_final;
+end
+
+
 % %percentage of zeros in the different regions of different subjects
 % percentage_zeros_CMRO2_subjs_final_spaces=[];
 % for row = 1:length(percentage_zeros_CMRO2_subjs_final(:,1))
@@ -479,7 +519,8 @@ end
 %isequal(labels_func_subjs_final_spaces,labels_dwi_subjs_final_spaces)
 
 
-%%
+%% save the following parameters
+
 medians_func = medians_func_subjs_final_spaces;
 
 means_pve_0_func = V_pve_0_func_mean_subjs_final_spaces;
