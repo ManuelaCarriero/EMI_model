@@ -7,14 +7,18 @@
 
 %%
 
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans.mat')
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/V_atlas_glass.mat')
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMmedians.mat')
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMPVEmeans.mat')
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/medians_CMRO2_GM_subjs.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/V_atlas_glass.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMmedians.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMPVEmeans.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/medians_CMRO2_GM_subjs.mat')
 
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_microparameters_GMmedians_withoutfsmasking.mat')
+
+load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions.mat')
 %% select parameters to be analyzed
-micro_parameter = 'fsup';
+micro_parameter = 'Rsoma';
 energy_parameter = 'CMRO2';
 
 if strcmp(micro_parameter,'Rsoma')
@@ -279,6 +283,8 @@ SE_pve_0_dwi(idx)=[];
 SE_pve_1_dwi(idx)=[];
 SE_pve_2_dwi(idx)=[];
 
+labels_final(idx)=[];
+
 % energetic regions
 
 idx = find(isnan(medians_energy_vec))
@@ -304,6 +310,8 @@ SE_pve_2_func(idx)=[];
 SE_pve_0_dwi(idx)=[];
 SE_pve_1_dwi(idx)=[];
 SE_pve_2_dwi(idx)=[];
+
+labels_final(idx)=[];
 
 disp('medians across subjects equal to NaN removed')
 
@@ -635,11 +643,15 @@ cmro2_regressed_zscored = medians_energy_scored-y_pve_0_dwi-y_pve_2_dwi;
 
 cmro2_regressed = cmro2_regressed_zscored.*std(medians_energy_vec)+mean(medians_energy_vec);
 
+
+
+
 %% plot
 % [r,p] = corrcoef(cmro2_regressed, medians_micro_parameter_vec,'rows','complete');
 
 y=cmro2_regressed';
 x=medians_micro_parameter_vec;
+
 % Fit a quadratic equation
 [pol,S] = polyfit(x, y, 1); %to plot the linear model I use this function
 % Evaluate the fitted polynomial
@@ -692,20 +704,25 @@ y0=50;
 width=550;
 height=450;
 if p(2)<0.05 && p(2)>0.01    
-    txt = {strcat('Pearson r = ',corr_coef_str,'*')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'*')};
 elseif p(2)<0.01 && p(2)>0.001   
-    txt = {strcat('Pearson r = ',corr_coef_str,'**')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'**')};
 elseif p(2)<0.001
-    txt = {strcat('Pearson r = ',corr_coef_str,'***')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'***')};
 elseif p(2)>0.05
-        txt = {strcat('Pearson r = ',corr_coef_str,'')};
+        txt = {strcat('Pearson r= ',corr_coef_str,'')};
 end
-%text(9,100,txt,'FontWeight', 'Bold','FontSize',12);
-%text(0.35,100,txt,'FontWeight', 'Bold','FontSize',12);
-text(10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
-%text(10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+if strcmp(micro_parameter,'Rsoma')
+    text(9,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fsoma')
+    text(0.35,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fsup')
+    text(10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fc')
+    text(10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+end
 set(gcf,'position',[x0,y0,width,height]);
-ylim([50,180]);
+ylim([50,190]);
 grid on
 
 
@@ -1070,7 +1087,7 @@ xlabel('Estimates','FontWeight','bold','FontSize',15);
 ylabel('Counts (# subjects)','FontWeight','bold','FontSize',15);
 title('Region coefficients estimates')
 ylim([0,9]);
-%xlim([-0.5,0.5])
+xlim([-0.6,0.6])
 xline(0,'--','LineWidth',3);
 % if p<0.05 && p>0.01    
 %     txt = {strcat('\mu_r = ',mean_corr,'*')};
@@ -1615,20 +1632,25 @@ y0=50;
 width=550;
 height=450;
 if p(2)<0.05 && p(2)>0.01    
-    txt = {strcat('Pearson r = ',corr_coef_str,'*')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'*')};
 elseif p(2)<0.01 && p(2)>0.001   
-    txt = {strcat('Pearson r = ',corr_coef_str,'**')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'**')};
 elseif p(2)<0.001
-    txt = {strcat('Pearson r = ',corr_coef_str,'***')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'***')};
 elseif p(2)>0.05
-        txt = {strcat('Pearson r = ',corr_coef_str,'')};
+        txt = {strcat('Pearson r= ',corr_coef_str,'')};
 end
-%text(9.5,100,txt,'FontWeight', 'Bold','FontSize',12);
-%text(0.45,100,txt,'FontWeight', 'Bold','FontSize',12);
-text(1.5*10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
-%text(1.5*10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+if strcmp(micro_parameter,'Rsoma')
+    text(9.5,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fsoma')
+    text(0.45,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fsup')
+    text(1.5*10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fc')
+    text(1.5*10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+end
 set(gcf,'position',[x0,y0,width,height]);
-%ylim([50,160]);
+ylim([50,190]);
 grid on
 
  %% plot spatially regional medians parametric maps
