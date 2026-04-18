@@ -753,6 +753,8 @@ for subj = 1:n_subjs
     V_CMRO2_masked_GM = V_CMRO2.*V_GM; 
     GM_func_zeros = find(V_GM==0);
     V_CMRO2_masked_GM(GM_func_zeros)=[];
+   
+    V_CMRO2_masked_GM(V_CMRO2_masked_GM==0)=NaN;
 
     medians_CMRO2_GM_subjs(end+1) = nanmedian(V_CMRO2_masked_GM);
 
@@ -1021,7 +1023,7 @@ for subj = 1:n_subjs
 
     %%%%for the analysis across subjs, considering the whole GM
     % here you don't have to be inside the regional for loop
-    V_GM_fs = V_GM.*V_fsoma_to_mask;
+    V_GM_fs = V_GM;%.*V_fsoma_to_mask;
 
     %mask
 
