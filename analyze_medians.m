@@ -16,7 +16,10 @@
 % load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking.mat')
 % load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_microparameters_GMmedians_withoutfsmasking.mat')
 
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions.mat')
+
+load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions_andfromGM.mat')
+
 %% select parameters to be analyzed
 micro_parameter = 'Rsoma';
 energy_parameter = 'CMRO2';
@@ -1085,7 +1088,7 @@ s=histogram(estimate_microparameter_subjs,'FaceAlpha',1,'BinWidth',0.07);
 s.FaceColor="b";
 xlabel('Estimates','FontWeight','bold','FontSize',15);
 ylabel('Counts (# subjects)','FontWeight','bold','FontSize',15);
-title('Region coefficients estimates')
+title('regression coefficients estimates')
 ylim([0,9]);
 xlim([-0.6,0.6])
 xline(0,'--','LineWidth',3);
@@ -1136,6 +1139,33 @@ end
 title(strcat(energy_parameter, 'vs',micro_parameter));
 text(0.1,7,txt, 'FontWeight', 'bold','FontSize',15);
 grid on
+
+%% considering only coefficients estimates whose pvalue is >0.05
+
+figure, 
+s=histogram(estimate_microparameter_subjs(pvalue_microparameter_subjs>0.05),'FaceAlpha',1,'BinWidth',0.07);
+s.FaceColor="b";
+xlabel('Estimates','FontWeight','bold','FontSize',15);
+ylabel('Counts (# subjects)','FontWeight','bold','FontSize',15);
+title('regression coefficients estimates')
+ylim([0,9]);
+xlim([-0.6,0.6])
+xline(0,'--','LineWidth',3);
+% if p<0.05 && p>0.01    
+%     txt = {strcat('\mu_r = ',mean_corr,'*')};
+% elseif p<0.01 && p>0.001   
+%     txt = {strcat('\mu_r = ',mean_corr,'**')};
+% elseif p<0.001
+%     txt = {strcat('\mu_r = ',mean_corr,'***')};
+% elseif p>0.05
+%         txt = {strcat('\mu_r = ',mean_corr,'')};
+% end
+
+% title(strcat(energy_parameter, 'vs',micro_parameter));
+% text(-0.5,7,txt, 'FontWeight', 'bold','FontSize',15);
+grid on
+
+[h,p]=ttest(estimate_microparameter_subjs(pvalue_microparameter_subjs>0.05))
 
 %% across subjs for each region
 % check correlation distribution 
@@ -1602,6 +1632,7 @@ delta_sorted = delta(index);
 [r,p] = corrcoef(medians_microparameter,cmro2_regressed,'rows','complete');
 
 corr_coef_str = num2str(round(r(2),2));
+pvalue_str = num2str(round(p(2),2));
 
 figure, 
 s=plot(medians_microparameter,cmro2_regressed,'.',MarkerSize=25);
