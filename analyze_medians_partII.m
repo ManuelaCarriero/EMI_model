@@ -1,7 +1,11 @@
 %% This programme analyzes medians calculated from compute_medians.m
 
 % Differently from analyze_medians.m, this programme considers more than
-% one microparameter at a time
+% one microparameter at a time. Particularly:
+
+%I part: CMRO2 vs rsoma + a microstructural density parameter and PVEs.
+%II part: microstructural density parameter vs radius of cells.
+%III part: features extraction.
 
 %%
 
@@ -14,8 +18,10 @@
 % load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking.mat')
 % load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_microparameters_GMmedians_withoutfsmasking.mat')
 
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels.mat')
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/labels_final.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/labels_final.mat')
+
+load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions.mat')
 
 n_subjs = 29;
 
@@ -146,7 +152,7 @@ tbl=table(medians_energy_scored_tr,medians_invertedrsoma_scored_tr,medians_rsoma
 
 
 
-covariate_microparameter='no'; %fsup %fsoma
+covariate_microparameter='no'; %otherwise: fsup %fsoma. In this case, pve covariates will be added.
 
 pve_micro_parameter='no';
 
@@ -213,8 +219,8 @@ cmro2_regressed = cmro2_regressed_zscored.*std(medians_energy_vec)+mean(medians_
 
 %% run this section to save names of labels in the variables
 
-micro_parameter = 'Rsoma';
-energy_parameter = 'CMRO2';
+micro_parameter = 'Rsoma';%x
+energy_parameter = 'CMRO2';%y
 
 if strcmp(micro_parameter,'Rsoma')
     unit_of_measure_dwi='(\mum)';
@@ -480,6 +486,8 @@ data = data_label(:,1:2);
 data_zscored = zscore(data);
 idx = dbscan(data_zscored,0.5,5);
 
+%%
+%considering that clusters 1 and 2, plus noise -1 have been detected.
 
 figure;
 plot(data_zscored(idx==1,1),data_zscored(idx==1,2),'r.','MarkerSize',12)
@@ -549,12 +557,18 @@ size(common_important_cluster)
 %Rsoma, CMRO2 vs fsoma
 
 %% run this in case you want only cortical regions
+% method not based on clustering algorithm
+
 cortical_regions = load('/home/c25078236/Desktop/WAND_data/AAL_cortical_labels.txt');
 numel(cortical_regions)
+
 common_important_cluster=cortical_regions';
+
 subcortical_regions = load('/home/c25078236/Desktop/WAND_data/AAL_subcortical_labels.txt');
 numel(subcortical_regions)
+
 common_sparsed_cluster=subcortical_regions';
+
 %%
 %run this in case you want regions classified by the clustering algorithm
 %selecting the main cluster 
