@@ -1,5 +1,34 @@
 %% programme that shows parametric maps
 
+%LOAD CMRO2 IN SUBJ SPACE
+
+V_CMRO2_maps={};
+%V_CBF_maps={};
+
+
+
+for i = start_subj:n_subjs
+    
+        
+    subj = subjects(i);
+    subj=num2str(subj);
+    if numel(subj)==4
+        subj=strcat('0',subj);
+    else
+        subj=subj;
+    end
+
+     img_path_CMRO2=strcat('/home/c25078236/Desktop/WAND_data/FUNC/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
+    % 
+
+    V_vol_CMRO2 = spm_vol(img_path_CMRO2);
+    V_CMRO2=spm_read_vols(V_vol_CMRO2);
+    V_CMRO2_maps{end+1}=V_CMRO2;
+% 
+
+end
+
+
 %% load subjects file
 
 subjects = importdata('/home/c25078236/Desktop/WAND_data/subjects.txt');
@@ -83,11 +112,11 @@ end
 % V_cmro2_maps=c;
 
 figure,
-for i = 1:numel(V_cmro2_maps)
+for i = 1:numel(V_CMRO2_maps)
     subplot(6,5,i);
-    V_cmro2 = V_cmro2_maps{i};
+    V_cmro2 = V_CMRO2_maps{i};
     imagesc(rot90(V_cmro2(:,:,7)))
-    clim([0,200])
+    clim([0,180])
     title(strcat('sub-',num2str(i)))
     cb=colorbar();
 end
@@ -114,6 +143,16 @@ V_fsoma_maps={};
 V_rsoma_maps={};
 
 for i=1:n_subjs
+
+    subj = subjects(i);
+    % subj=subj{1};
+    subj = num2str(subj);
+
+    if numel(subj)==4
+        subj=strcat('0',subj);
+    else
+        subj=subj;
+    end
 
     img_path_fsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS_toMNI/sub-',subj,'/SANDI-fit_fsomatoMNI.nii.gz');
     img_path_rsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS_toMNI/sub-',subj,'/SANDI-fit_RsomatoMNI.nii.gz');
@@ -203,6 +242,19 @@ title('Numerical Soma Density map')
 
 
 %%
+
+V_cmro2_removed=V_cmro2_maps;
+V_cmro2_removed{4}=[];
+V_cmro2_removed{12}=[];
+
+all_cmro2_maps_subjs = cat(4,V_cmro2_removed{:});
+median_cmro2_maps_subjs = nanmedian(all_cmro2_maps_subjs,4);
+
+figure, 
+imagesc(rot90(median_cmro2_maps_subjs(:,:,45)))
+clim([0,180])
+
+%%
 all_cmro2_maps_subjs = cat(4,V_cmro2_maps{:});
 median_cmro2_maps_subjs = nanmedian(all_cmro2_maps_subjs,4);
 
@@ -217,6 +269,9 @@ median_fc_maps_subjs = nanmedian(all_fc_maps_subjs,4);
 
 all_fsoma_maps_subjs = cat(4,V_fsoma_maps{:});
 median_fsoma_maps_subjs = nanmedian(all_fsoma_maps_subjs,4);
+
+all_rsoma_maps_subjs = cat(4,V_rsoma_maps{:});
+median_rsoma_maps_subjs = nanmedian(all_rsoma_maps_subjs,4);
 
 
 
@@ -243,7 +298,8 @@ hdr=niftiinfo(img_path_T1MNI);
 hdr.Datatype = 'double';
 hdr.ImageSize = size(median_cmro2_maps_subjs);
 
-niftiwrite(median_cmro2_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/median_cmro2.nii.gz',hdr,"Compressed",true);
-niftiwrite(median_fsoma_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/median_fsoma.nii.gz',hdr,"Compressed",true);
-niftiwrite(median_fsup_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/median_fsup.nii.gz',hdr,"Compressed",true);
-niftiwrite(median_fc_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/median_fc.nii.gz',hdr,"Compressed",true);
+niftiwrite(median_cmro2_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/260309/median_cmro2.nii.gz',hdr,"Compressed",true);
+niftiwrite(median_fsoma_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/260309/median_fsoma.nii.gz',hdr,"Compressed",true);
+niftiwrite(median_fsup_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/260309/median_fsup.nii.gz',hdr,"Compressed",true);
+niftiwrite(median_fc_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/260309/median_fc.nii.gz',hdr,"Compressed",true);
+niftiwrite(median_rsoma_maps_subjs,'/home/c25078236/Desktop/WAND_data/median_maps_MNI/260309/median_Rsoma.nii.gz',hdr,"Compressed",true);
