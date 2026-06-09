@@ -3,28 +3,206 @@
 % Differently from analyze_medians.m, this programme considers more than
 % one microparameter at a time. Particularly:
 
-%I part: CMRO2 vs rsoma + a microstructural density parameter and PVEs.
-%II part: microstructural density parameter vs radius of cells.
-%III part: features extraction.
+%I part: FOR EACH SUBJECT, plot microstructural density parameter vs radius of cells 
+% regression estimates distribution and scatterplots.
+
+%II part: CMRO2 vs rsoma + a microstructural density parameter and PVEs.
+
+%III part: FOR MEDIANS ACROSS SUBJECTS, microstructural density parameter vs radius of cells.
+
+%IV part: check if cortical and subcortical regions follow different
+%trends, both selecting them through labels and using clustering.
+
+%V part: features extraction.
 
 %%
 
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/V_atlas_glass.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMmedians.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMPVEmeans.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/medians_CMRO2_GM_subjs.mat')
-
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_microparameters_GMmedians_withoutfsmasking.mat')
-
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/labels_final.mat')
-
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions.mat')
+% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions_andfromGM.mat')
+load('/home/c25078236/Desktop/saved_workspace/programmi/computed_data.mat')
 
 n_subjs = 29;
 
+%% I PART
+
+%% select variables choosing on of the three combinations: fsoma vs rs, SAD vs rs, fs vs SAD.
+
+micro_var2 = 'fsoma';
+micro_var1 = 'fsup';
+
+if strcmp(micro_var2,'fsoma') && strcmp(micro_var1,'Rsoma')
+    reg_estimate = '\kappa_1';
+elseif strcmp(micro_var2,'fsup') && strcmp(micro_var1,'Rsoma')
+    reg_estimate = '\eta_1';
+elseif strcmp(micro_var2,'fsoma') && strcmp(micro_var1,'fsup')
+    reg_estimate = '\lambda_1';
+end
+
+%%
+
+if strcmp(micro_var1,'Rsoma')
+    label_microvar1 = 'r_s(\mum)';
+    medians_var1 = medians_rsoma_subjs_final_spaces;
+elseif strcmp(micro_var1,'fsoma')
+    label_microvar1 = 'fsoma';
+    medians_var1 = medians_fsoma_subjs_final_spaces;
+elseif strcmp(micro_var1,'fsup')
+    label_microvar1 = 'fsup(m^{-1})';
+    medians_var1 = medians_fsup_subjs_final_spaces;
+elseif strcmp(micro_var1,'fc')
+    label_microvar1 = 'fc(m^{-3})';
+    medians_var1 = medians_fc_subjs_final_spaces;
+end
+
+if strcmp(micro_var2,'Rsoma')
+    label_microvar2 = 'r_s(\mum)';
+    medians_var2 = medians_rsoma_subjs_final_spaces;
+elseif strcmp(micro_var2,'fsoma')
+    label_microvar2 = 'f_s';
+    medians_var2 = medians_fsoma_subjs_final_spaces;
+elseif strcmp(micro_var2,'fsup')
+    label_microvar2 = 'SAD(m^{-1})';
+    medians_var2 = medians_fsup_subjs_final_spaces;
+elseif strcmp(micro_var2,'fc')
+    label_microvar2 = 'NAD(m^{-3})';
+    medians_var2 = medians_fc_subjs_final_spaces;
+end
+
+
+%% scatterplot microvar1 vs microvar2
+
+disp('Computing GLM for each subject')
+
+pvalue_microparameter_subjs=[];
+estimate_microparameter_subjs=[];
+corr_for_each_subjs_regout_pves=[];
+
+figure,
+for i = 1:n_subjs
+    medians_var1_subj=medians_var1(i,:);
+    medians_var2_subj=medians_var2(i,:);
+    means_pve_0_subj=means_pve_0_dwi(i,:);
+    means_pve_2_subj=means_pve_2_dwi(i,:);
+    
+    %%%%
+    %find nans
+    idx_var1_nans = find(isnan(medians_var1_subj));
+    idx_var2_nans = find(isnan(medians_var2_subj));
+    idx_means_pve_0_nans = find(isnan(means_pve_0_subj));
+    idx_means_pve_2_nans = find(isnan(means_pve_2_subj));
+
+    idx_tot = unique(cat(2,idx_var1_nans,idx_var2_nans,idx_means_pve_0_nans,idx_means_pve_2_nans));
+    %remove nans
+    medians_var1_subj(idx_tot)=[];
+    medians_var2_subj(idx_tot)=[];
+    means_pve_0_subj(idx_tot)=[];
+    means_pve_2_subj(idx_tot)=[];
+    %%%%
+
+    samples_mat=cat(1,medians_var1_subj,medians_var2_subj,means_pve_0_subj,means_pve_2_subj);
+    % samples_mat=rmmissing(samples_mat,2);
+
+    medians_var1_subj_scored=nanzscore(samples_mat(1,:));
+    medians_var2_subj_scored=nanzscore(samples_mat(2,:));
+    means_pve_0_subj_scored=nanzscore(samples_mat(3,:));
+    means_pve_2_subj_scored=nanzscore(samples_mat(4,:));
+
+    medians_var1_subj_scored_tr=medians_var1_subj_scored';
+    medians_var2_subj_scored_tr=medians_var2_subj_scored';
+    means_pve_0_subj_scored_tr=means_pve_0_subj_scored';
+    means_pve_2_subj_scored_tr=means_pve_2_subj_scored';
+
+    tbl=table(medians_var2_subj_scored_tr,medians_var1_subj_scored_tr,means_pve_0_subj_scored_tr,means_pve_2_subj_scored_tr, 'VariableNames', ...
+        {'var2','var1','pve_0_dwi','pve_2_dwi'});
+    %build your model
+    mdl=fitlm(tbl,'var2 ~ var1 + pve_0_dwi + pve_2_dwi','RobustOpts','on');
+
+    coeffs_mat=table2array(mdl.Coefficients);
+    pvalue_microparameter=coeffs_mat(2,4);
+    estimate_microparameter=coeffs_mat(2,1);
+    pvalue_microparameter_subjs(end+1)=pvalue_microparameter;
+    estimate_microparameter_subjs(end+1)=estimate_microparameter;
+
+    %calculate CMRO2 values without pve contributions
+
+    pve_0_estimate = coeffs_mat(3,1);
+    pve_2_estimate = coeffs_mat(4,1);
+    var2_without_pves = medians_var2_subj_scored_tr - means_pve_0_subj_scored_tr.*pve_0_estimate - means_pve_2_subj_scored_tr.*pve_2_estimate;
+
+
+    %calculate corr coef for each subject
+    [r,p] = corrcoef(medians_var1_subj_scored_tr, var2_without_pves, 'rows','complete');
+    
+    corr_for_each_subjs_regout_pves(end+1) = r(2);  
+
+    %plot
+
+    var2_regressed = var2_without_pves.*nanstd(medians_var2_subj)+nanmean(medians_var2_subj);
+
+    y=var2_regressed';
+    x=medians_var1_subj;
+    idx_nan_y=find(isnan(y));
+    idx_nan_x=find(isnan(x));
+    idx_nan = unique(cat(2,idx_nan_y,idx_nan_x));
+    y(idx_nan)=[];
+    x(idx_nan)=[];
+    % Fit a quadratic equation
+    pol = polyfit(x, y, 1);
+    % Evaluate the fitted polynomial
+    y_fit = polyval(pol, x);
+    % Calculate the R-squared value
+    Rsquared = 1 - sum((y - y_fit).^2) / sum((y - nanmean(y)).^2);
+    Rsquared
+    
+    [x_sorted,index] = sortrows(x');
+    y_fit=y_fit';
+    y_fit_sorted = y_fit(index);
+
+    subplot(5,6,i)   
+    plot(medians_var1_subj, var2_regressed,'.')
+    hold on
+    plot(x_sorted,y_fit_sorted,'--','LineWidth',3,'Color',"#000000");
+    xlabel('r_s','FontWeight','bold');
+    ylabel(strcat('f_s'),'FontWeight','bold');
+    title(strcat('subj-',num2str(i)))
+    grid on
+end
+% Error using statrobustfit (line 21)
+% Not enough points to perform robust estimation.
+%so you must put robustots off
+
+
+%regression coefficient distribution
+
+figure, 
+s=histogram(estimate_microparameter_subjs,'FaceAlpha',1,'BinWidth',0.07);
+s.FaceColor="b";
+xlabel(strcat('regression coefficient estimate,', reg_estimate),'FontWeight','bold','FontSize',12);
+ylabel('Counts (# subjects)','FontWeight','bold','FontSize',12);
+% title('')
+ylim([0,12.5]);
+xlim([-0.9,1])
+xline(0,'--','LineWidth',3);
+% if p<0.05 && p>0.01    
+%     txt = {strcat('\mu_r = ',mean_corr,'*')};
+% elseif p<0.01 && p>0.001   
+%     txt = {strcat('\mu_r = ',mean_corr,'**')};
+% elseif p<0.001
+%     txt = {strcat('\mu_r = ',mean_corr,'***')};
+% elseif p>0.05
+%         txt = {strcat('\mu_r = ',mean_corr,'')};
+% end
+
+% title(strcat(energy_parameter, 'vs',micro_parameter));
+% text(-0.5,7,txt, 'FontWeight', 'bold','FontSize',15);
+grid on
+
+median_estimate = median(estimate_microparameter_subjs)
+mean_estimate = mean(estimate_microparameter_subjs)
+std_estimate = std(estimate_microparameter_subjs)
+
+[h,p]=ttest(estimate_microparameter_subjs)%1 rejects the null hypothesis that the mean is equal to 0.
+
+%% II PART
 
 %% calculate median across subjects
 
@@ -60,6 +238,10 @@ means_pve_2_func_vec = nanmedian(means_pve_2_func,1);
 SE_pve_2_func = nanstd(means_pve_2_func_vec,0,1)/sqrt(n_subjs);
 
 disp('median across subjects computed')
+
+
+
+
 
 %% remove regions whose resulting median regional value across subjects is NAN
 %in either the functional parameter or microstructural parameter
@@ -315,7 +497,7 @@ set(gcf,'position',[x0,y0,width,height]);
 ylim([50,190]);
 grid on
 
-%% II PART: study of the cellular packaging (see christallography)
+%% III PART
 
 %% define table for GLM
 
@@ -324,7 +506,7 @@ tbl=table(medians_energy_scored_tr,medians_invertedrsoma_scored_tr,medians_rsoma
     {'CMRO2','invertedRsoma','Rsoma','fsoma','fsup','fc','pve_0_dwi','pve_2_dwi'});
 
 %% select parameters
-parameter_y = 'fsup';%fsup
+parameter_y = 'fsoma';%fsup
 parameter_x = 'Rsoma';
 
 %%
@@ -453,11 +635,11 @@ height=450;
 if p(2)<0.05 && p(2)>0.01    
     txt = {strcat('Pearson r = ',corr_coef_str,'*')};
 elseif p(2)<0.01 && p(2)>0.001   
-    txt = {strcat('Pearson r = ',corr_coef_str,'**')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'**')};
 elseif p(2)<0.001
-    txt = {strcat('Pearson r = ',corr_coef_str,'***')};
+    txt = {strcat('Pearson r= ',corr_coef_str,'***')};
 elseif p(2)>0.05
-        txt = {strcat('Pearson r = ',corr_coef_str,'')};
+        txt = {strcat('Pearson r= ',corr_coef_str,'')};
 end
 if strcmp(parameter_x,'Rsoma') && strcmp(parameter_y,'fsoma')
     text(9,0.5,txt,'FontWeight', 'Bold','FontSize',12);
@@ -468,6 +650,35 @@ elseif strcmp(parameter_x,'Rsoma') && strcmp(parameter_y,'fsup')
 end
 set(gcf,'position',[x0,y0,width,height]);
 % ylim([50,180]);
+grid on
+
+%% V PART
+
+%% plot coloring based on cortical and subcortical
+cortical_regions = load('/home/c25078236/Desktop/WAND_data/AAL_cortical_labels.txt');
+
+logical_cortical_regions = ismember(labels_final,cortical_regions);
+% figure,
+% for i=1:length(x)
+%     if labels_final(i)==any(cortical_regions)
+%         plot(x(i),y(i),'r.','MarkerSize',22)
+% 
+%     else
+%         plot(x(i),y(i),'b.','MarkerSize',22)
+% 
+%     end
+%     hold on
+% end
+% hold off
+% grid on
+
+figure,
+plot(x(logical_cortical_regions==1),y(logical_cortical_regions==1),'r.','MarkerSize',22)
+hold on
+plot(x(logical_cortical_regions==0),y(logical_cortical_regions==0),'b.','MarkerSize',22)
+legend('Cortical Region','Subcortical Region','Location','northwest') 
+xlabel(strcat(micro_parameter_x,unit_of_measure_x),'FontSize',15,'FontWeight','bold');
+ylabel(strcat(micro_parameter_y,unit_of_measure_y),'FontSize',15,'FontWeight','bold');
 grid on
 
 %% clustering
@@ -490,14 +701,17 @@ idx = dbscan(data_zscored,0.5,5);
 %considering that clusters 1 and 2, plus noise -1 have been detected.
 
 figure;
-plot(data_zscored(idx==1,1),data_zscored(idx==1,2),'r.','MarkerSize',12)
+plot(data_zscored(idx==1,1),data_zscored(idx==1,2),'r.','MarkerSize',22)
 hold on
-plot(data_zscored(idx==2,1),data_zscored(idx==2,2),'b.','MarkerSize',12)
-plot(data_zscored(idx==-1,1),data_zscored(idx==-1,2),'k.','MarkerSize',12)
+plot(data_zscored(idx==2,1),data_zscored(idx==2,2),'b.','MarkerSize',22)
+plot(data_zscored(idx==-1,1),data_zscored(idx==-1,2),'k.','MarkerSize',22)
 % plot(C(:,1),C(:,2),'kx',...
 %      'MarkerSize',15,'LineWidth',3) 
 legend('Cluster 1','Cluster 2','Noise','Location','NW') %'Centroids',...
-title 'Cluster Assignments'% and Centroids'
+xlabel(strcat(micro_parameter_x,unit_of_measure_x),'FontSize',15,'FontWeight','bold');
+ylabel(strcat(micro_parameter_y,unit_of_measure_y),'FontSize',12,'FontWeight','bold');
+% title 'Cluster Assignments'% and Centroids'
+grid on
 hold off
 
 %a=[3,4,5];
@@ -543,8 +757,21 @@ end
 common_important_cluster = intersect(important_cluster_fsupvsrsoma,important_cluster_fsomavsrsoma);
 common_sparsed_cluster = intersect(sparsed_cluster_fsupvsrsoma,sparsed_cluster_fsomavsrsoma);
 
+disp('common_sparsed_cluster')
 size(common_sparsed_cluster)
+disp('common_important_cluster')
 size(common_important_cluster)
+
+disp('important_cluster_fsupvsrsoma')
+size(important_cluster_fsupvsrsoma)
+disp('important_cluster_fsomavsrsoma')
+size(important_cluster_fsomavsrsoma)
+
+disp('sparsed_cluster_fsupvsrsoma')
+size(sparsed_cluster_fsupvsrsoma)
+disp('sparsed_cluster_fsomavsrsoma')
+size(sparsed_cluster_fsomavsrsoma)
+
 % common_noise = intersect(noise_cluster_fsupvsrsoma,noise_cluster_fsomavsrsoma);
 % common_small_cluster = intersect(small_cluster_fsupvsrsoma,small_cluster_fsomavsrsoma);
 % tot_labels = cat(2, common_noise,common_important_cluster,common_small_cluster);
@@ -569,12 +796,17 @@ numel(subcortical_regions)
 
 common_sparsed_cluster=subcortical_regions';
 
-%%
-%run this in case you want regions classified by the clustering algorithm
+%% run this in case you want regions classified by the clustering algorithm
 %selecting the main cluster 
 logical_important_cluster = ismember(labels_final,common_important_cluster);
 % idx_important_cluster = find(logical_important_cluster);
 
+%selecting the sparsed cluster
+
+logical_sparsed_cluster = ismember(labels_final,common_sparsed_cluster);
+% idx_sparsed_cluster = find(logical_sparsed_cluster);
+
+%%
 
 
 medians_rsoma_scored_important_cluster=medians_rsoma_scored_tr(logical_important_cluster);
@@ -595,6 +827,12 @@ means_pve_0_important_cluster = means_pve_0_dwi_vec(logical_important_cluster);
 means_pve_2_important_cluster = means_pve_2_dwi_vec(logical_important_cluster);
 means_pve_1_important_cluster = means_pve_1_dwi_vec(logical_important_cluster);
 
+SE_important_cluster_energy = SE_energy(logical_important_cluster);
+SE_important_cluster_rsoma = SE_rsoma(logical_important_cluster);
+SE_important_cluster_fsoma = SE_fsoma(logical_important_cluster);
+SE_important_cluster_fsup = SE_fsup(logical_important_cluster);
+SE_important_cluster_fc = SE_fc(logical_important_cluster);
+
 % %test
 % figure,
 % scatter(medians_rsoma_scored_important_cluster,medians_fsup_scored_important_cluster,'Marker','s')
@@ -606,10 +844,6 @@ means_pve_1_important_cluster = means_pve_1_dwi_vec(logical_important_cluster);
 
 
 
-%selecting the sparsed cluster
-
-logical_sparsed_cluster = ismember(labels_final,common_sparsed_cluster);
-% idx_sparsed_cluster = find(logical_sparsed_cluster);
 
 medians_rsoma_scored_sparsed_cluster=medians_rsoma_scored_tr(logical_sparsed_cluster);
 medians_fsoma_scored_sparsed_cluster=medians_fsoma_scored_tr(logical_sparsed_cluster);
@@ -633,9 +867,9 @@ means_pve_1_sparsed_cluster = means_pve_1_dwi_vec(logical_sparsed_cluster);
 
 %% choose microparameter to study its relationship with CMRO2 and which cluster
 cluster='important'; %sparsed
-parameter_x = 'Rsoma';
+parameter_x = 'fc';
 
-pve_adjustment = 'no';
+pve_adjustment = 'yes';
 
 %% GLM
 
@@ -668,6 +902,7 @@ elseif strcmp(parameter_x,'Rsoma')
         x = medians_rsoma_sparsed_cluster;
     else
         x=medians_rsoma_important_cluster;
+        SE_x=SE_important_cluster_rsoma;
     end
     % SE_x = SE_rsoma;
     micro_parameter_x = 'Rsoma';
@@ -678,6 +913,7 @@ elseif strcmp(parameter_x,'fsoma')
         x = medians_fsoma_sparsed_cluster;
     else
         x = medians_fsoma_important_cluster;
+        SE_x=SE_important_cluster_fsoma;
     end
     % SE_x = SE_fsoma;
     micro_parameter_x = 'fsoma';
@@ -688,6 +924,7 @@ elseif strcmp(parameter_x,'fsup')
         x = medians_fsup_sparsed_cluster;
     else
         x=medians_fsup_important_cluster;
+        SE_x=SE_important_cluster_fsup;
     end
     % SE_x = SE_fsup;
     micro_parameter_x = 'fsup';
@@ -698,12 +935,14 @@ elseif strcmp(parameter_x,'fc')
         x = medians_fc_sparsed_cluster;
     else
         x=medians_fc_important_cluster;
+        SE_x=SE_important_cluster_fc;
     end
     % SE_x = SE_fc;
     micro_parameter_x = 'fc';
     unit_of_measure_x='(m^{-3})';
 end
 
+SE_y=SE_important_cluster_energy;
 
 %% regress out
 coeffs_mat=table2array(mdl.Coefficients);
@@ -742,7 +981,7 @@ elseif strcmp(pve_adjustment,'yes')
     y=cmro2_regressed;
 end
 
-SE_y=SE_energy;
+% SE_y=SE_energy;
 
 % Fit a quadratic equation
 [pol,S] = polyfit(x, y, 1); %to plot the linear model I use this function
@@ -767,8 +1006,9 @@ corr_coef_str = num2str(round(r(2),2));
 pvalue_str = num2str(round(p(2),3));
 
 figure, 
-s=plot(x,y,'.',MarkerSize=25);
-% s = errorbar(x, y, SE_y, SE_y, SE_x, SE_x,'.','MarkerSize',22);
+s=plot(x,y,'r.','MarkerSize',22);
+% s=plot(x,y,'.',MarkerSize=25,Color='r');
+s1 = errorbar(x, y, SE_y, SE_y, SE_x, SE_x,'r.','MarkerSize',22);
 
 
 %plot confidence interval shadow
@@ -787,8 +1027,8 @@ hold on
 plot(x_sorted,y_fit_sorted-delta_sorted,'--',x_sorted,y_fit_sorted+delta_sorted,'--','LineWidth',1.5,'Color',[0.5 0.5 0.5])
 
 xlabel(strcat(micro_parameter_x,unit_of_measure_x),'FontSize',15,'FontWeight','bold');
-ylabel('CMRO_2(\mumol/100g/min','FontSize',12,'FontWeight','bold');
-s.Color='b';
+ylabel('CMRO_2(\mumol/100g/min)','FontSize',12,'FontWeight','bold');
+% s.Color='b';
 set(get(gca, 'XAxis'), 'FontWeight', 'bold');
 set(get(gca, 'YAxis'), 'FontWeight', 'bold');
 set(gca,'box','off')
@@ -797,13 +1037,13 @@ y0=50;
 width=550;
 height=450;
 if p(2)<0.05 && p(2)>0.01    
-    txt = {strcat('Pearson r = ',corr_coef_str,'*,p-value=',pvalue_str)};
+    txt = {strcat('Pearson r= ',corr_coef_str,'*,p-value=',pvalue_str)};
 elseif p(2)<0.01 && p(2)>0.001   
-    txt = {strcat('Pearson r = ',corr_coef_str,'**,p-value=',pvalue_str)};
+    txt = {strcat('Pearson r= ',corr_coef_str,'**,p-value=',pvalue_str)};
 elseif p(2)<0.001
-    txt = {strcat('Pearson r = ',corr_coef_str,'***,p-value=',pvalue_str)};
+    txt = {strcat('Pearson r= ',corr_coef_str,'***,p-value=',pvalue_str)};
 elseif p(2)>0.05
-        txt = {strcat('Pearson r = ',corr_coef_str,',p-value=',pvalue_str)};
+        txt = {strcat('Pearson r= ',corr_coef_str,',p-value=',pvalue_str)};
 end
 if strcmp(parameter_x,'Rsoma')
     text(9,100,txt,'FontWeight', 'Bold','FontSize',12);
@@ -816,13 +1056,38 @@ elseif strcmp(parameter_x,'fc')
 end
 title('Main cluster')
 set(gcf,'position',[x0,y0,width,height]);
-% ylim([50,180]);
+ylim([40,200]);
+% xlim([0.37,0.55])
+xlim([0.9*10^(14),1.71*10^(14)])
 grid on
 
 
+%% check which are these regions
 
-% add error bars even to this plot
+cortical_regions = load('/home/c25078236/Desktop/WAND_data/AAL_cortical_labels.txt');
+subcortical_regions = load('/home/c25078236/Desktop/WAND_data/AAL_subcortical_labels.txt');
+
+numel(cortical_regions)%84
+numel(common_important_cluster)%98
+
+n_cortical_regions_important = ismember(common_important_cluster, cortical_regions);
+sum(n_cortical_regions_important)%80
+
+n_subcortical_regions_important = ismember(common_important_cluster,subcortical_regions);
+sum(n_subcortical_regions_important)%18
+
+n_cortical_regions_sparsed = ismember(common_sparsed_cluster, cortical_regions);
+sum(n_cortical_regions_sparsed)%2
+
+n_subcortical_regions_sparsed = ismember(common_sparsed_cluster,subcortical_regions);
+sum(n_subcortical_regions_sparsed)%22
+
+
+%warning for polyfit fc
+
 % check where these regions are in the brain
+
+%% V PART
 
 %% features extraction
 
