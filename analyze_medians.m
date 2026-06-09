@@ -7,18 +7,14 @@
 
 %%
 
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/V_atlas_glass.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMmedians.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_GMPVEmeans.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/medians_CMRO2_GM_subjs.mat')
+% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions_andfromGM.mat')
 
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_microparameters_GMmedians_withoutfsmasking.mat')
+% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONSANDNDWIVOXELScomputed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions_andfromGM.mat')
+% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_medians_CMRO2_GM_subjs.mat')
 
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions.mat')
-
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/computed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_removingzerosfromcmro2regions_andfromGM.mat')
+% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONSANDNDWIVOXELScomputed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_NOTremovingzerosfromcmro2regions_andfromGM.mat')
+load('/home/c25078236/Desktop/saved_workspace/programmi/computed_data.mat')
+labels_final_original = labels_final;
 
 %% select parameters to be analyzed
 micro_parameter = 'Rsoma';
@@ -515,9 +511,9 @@ disp('medians across subjects equal to NaN removed')
 % medians_pve_2_dwi_scored = zscore(medians_pve_2_dwi_vec);
 % medians_energy_dwi_scored = zscore(medians_energy_vec);
 %medians_micro_parameter_vec = medians_fc;
-cd('/home/c25078236/Desktop/programmes/250902')
+% cd('/home/c25078236/Desktop/programmes/250902')
 
-disp('Computing Generalized Linear Model')
+disp('Computing Generalized Linear Model across regions (medians between subjs)')
 
 medians_dwi_scored = nanzscore(medians_micro_parameter_vec);
 means_pve_0_dwi_scored = nanzscore(means_pve_0_dwi_vec);
@@ -644,6 +640,8 @@ y_pve_0_dwi = means_pve_0_dwi_scored.*estimate_pve_0;
 y_pve_2_dwi = means_pve_2_dwi_scored.*estimate_pve_2;
 cmro2_regressed_zscored = medians_energy_scored-y_pve_0_dwi-y_pve_2_dwi;
 
+%trasform zscored y variable back to original units
+
 cmro2_regressed = cmro2_regressed_zscored.*std(medians_energy_vec)+mean(medians_energy_vec);
 
 
@@ -698,6 +696,7 @@ plot(x_sorted,y_fit_sorted-delta_sorted,'--',x_sorted,y_fit_sorted+delta_sorted,
 
 xlabel(strcat(micro_parameter,unit_of_measure_dwi),'FontSize',15,'FontWeight','bold');
 ylabel(strcat('Adjusted CMRO_2',unit_of_measure_energy),'FontSize',12,'FontWeight','bold');
+title(strcat('CMRO_2 vs',micro_parameter))
 s.Color='b';
 set(get(gca, 'XAxis'), 'FontWeight', 'bold');
 set(get(gca, 'YAxis'), 'FontWeight', 'bold');
@@ -725,7 +724,7 @@ elseif strcmp(micro_parameter,'fc')
     text(10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
 end
 set(gcf,'position',[x0,y0,width,height]);
-ylim([50,190]);
+ylim([40,200]);
 grid on
 
 
@@ -741,6 +740,102 @@ grid on
 %you can't have error bars because you can't regress out for
 %each subject.
 
+%% plot based on cortical and subcortical
+
+type = 'subcortical';
+
+if strcmp(type,'cortical')
+    label=1;
+elseif strcmp(type,'subcortical')
+    label=0;
+end
+
+cortical_regions = load('/home/c25078236/Desktop/WAND_data/AAL_cortical_labels.txt');
+cortical_regions_logical = ismember(labels_final,cortical_regions);
+
+x = medians_micro_parameter_vec(cortical_regions_logical==label);
+y = cmro2_regressed(cortical_regions_logical==label);
+
+% Fit a quadratic equation
+[pol,S] = polyfit(x, y, 1); %to plot the linear model I use this function
+% Evaluate the fitted polynomial
+y_fit = polyval(pol, x);
+% Calculate the R-squared value
+Rsquared = 1 - sum((y - y_fit).^2) / sum((y - nanmean(y)).^2);
+% Rsquared
+
+alpha = 0.05; % Significance level
+[y_fit,delta] = polyconf(pol,x,S,'alpha',alpha);
+
+[x_sorted,index] = sortrows(x');
+y_fit=y_fit';
+delta = delta';
+y_fit_sorted = y_fit(index);
+delta_sorted = delta(index);
+
+
+[r,p] = corrcoef(medians_micro_parameter_vec(cortical_regions_logical==label),cmro2_regressed(cortical_regions_logical==label));
+corr_coef_str = num2str(round(r(2),2));
+
+figure, 
+%s=plot(medians_micro_parameter_vec,cmro2_regressed,'.',MarkerSize=25);
+s = errorbar(medians_micro_parameter_vec(cortical_regions_logical==label), cmro2_regressed(cortical_regions_logical==label), SE_energy(cortical_regions_logical==label), SE_energy(cortical_regions_logical==label), SE_micro_parameter(cortical_regions_logical==label), SE_micro_parameter(cortical_regions_logical==label),'.','MarkerSize',22);
+
+
+%plot confidence interval shadow
+x_patch = x_sorted;
+y_patch_lower = y_fit_sorted-delta_sorted;
+y_patch_higher = y_fit_sorted+delta_sorted;
+
+x_all = [x_patch; flipud(x_patch)];
+y_all = [y_patch_higher; flipud(y_patch_lower)];
+
+patch(x_all,y_all,'cyan','FaceAlpha',0.1,'EdgeColor','none')
+
+hold on
+plot(x_sorted,y_fit_sorted,'--','LineWidth',3,'Color',"#000000");
+hold on
+plot(x_sorted,y_fit_sorted-delta_sorted,'--',x_sorted,y_fit_sorted+delta_sorted,'--','LineWidth',1.5,'Color',[0.5 0.5 0.5])
+
+xlabel(strcat(micro_parameter,unit_of_measure_dwi),'FontSize',15,'FontWeight','bold');
+ylabel(strcat('Adjusted CMRO_2',unit_of_measure_energy),'FontSize',12,'FontWeight','bold');
+title(strcat('CMRO_2 vs',micro_parameter),'FontSize',22)
+if strcmp(type,'cortical')
+    s.Color='r';
+elseif strcmp(type,'subcortical')
+    s.Color='b';
+end
+t.Color='b';
+set(get(gca, 'XAxis'), 'FontWeight', 'bold');
+set(get(gca, 'YAxis'), 'FontWeight', 'bold');
+set(gca,'box','off')
+x0=50;
+y0=50;
+width=550;
+height=450;
+if p(2)<0.05 && p(2)>0.01    
+    txt = {strcat('Pearson r= ',corr_coef_str,'*')};
+elseif p(2)<0.01 && p(2)>0.001   
+    txt = {strcat('Pearson r= ',corr_coef_str,'**')};
+elseif p(2)<0.001
+    txt = {strcat('Pearson r= ',corr_coef_str,'***')};
+elseif p(2)>0.05
+        txt = {strcat('Pearson r= ',corr_coef_str,'')};
+end
+if strcmp(micro_parameter,'Rsoma')
+    text(9,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fsoma')
+    text(0.35,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fsup')
+    text(10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
+elseif strcmp(micro_parameter,'fc')
+    text(10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+end
+set(gcf,'position',[x0,y0,width,height]);
+ylim([40,200]);
+grid on
+
+disp('stop')
  %% TEST YOUR MODEL
 % 
 % %% analysis using all regions for all subjects
@@ -1026,12 +1121,36 @@ pvalue_microparameter_subjs=[];
 estimate_microparameter_subjs=[];
 corr_for_each_subjs_regout_pves=[];
 
+% choose to plot either the distribution or the scatterplots
+
+figure,
 for i = 1:n_subjs
     medians_dwi_subj=medians_dwi(i,:);
     medians_func_subj=medians_func(i,:);
     means_pve_0_subj=means_pve_0_dwi(i,:);
     means_pve_2_subj=means_pve_2_dwi(i,:);
+    %%%%%%%%
 
+    %find nans
+    idx_dwi_nans = find(isnan(medians_dwi_subj));
+    idx_func_nans = find(isnan(medians_func_subj));
+    idx_means_pve_0_nans = find(isnan(means_pve_0_subj));
+    idx_means_pve_2_nans = find(isnan(means_pve_2_subj));
+    idx_tot = unique(cat(2,idx_dwi_nans,idx_func_nans,idx_means_pve_0_nans,idx_means_pve_2_nans));
+    %remove nans
+    medians_dwi_subj(idx_tot)=[];
+    medians_func_subj(idx_tot)=[];
+    means_pve_0_subj(idx_tot)=[];
+    means_pve_2_subj(idx_tot)=[];
+
+
+    h=hist(medians_dwi_subj)
+    xlabel(micro_parameter,'FontWeight','bold')
+    ylabel('Counts (# of regions)','FontWeight','bold')
+    hold on
+    grid on
+
+    %%%%%%%
     samples_mat=cat(1,medians_dwi_subj,medians_func_subj,means_pve_0_subj,means_pve_2_subj);
     % samples_mat=rmmissing(samples_mat,2);
 
@@ -1062,10 +1181,43 @@ for i = 1:n_subjs
     pve_2_estimate = coeffs_mat(4,1);
     cmro2_without_pves = medians_func_subj_scored_tr - means_pve_0_subj_scored_tr.*pve_0_estimate - means_pve_2_subj_scored_tr.*pve_2_estimate;
 
+
     %calculate corr coef for each subject
     [r,p] = corrcoef(medians_dwi_subj_scored_tr, cmro2_without_pves, 'rows','complete');
-
+    
     corr_for_each_subjs_regout_pves(end+1) = r(2);  
+
+    % %scatterplots plot
+    % 
+    % cmro2_regressed = cmro2_without_pves.*nanstd(medians_func_subj)+nanmean(medians_func_subj);
+    % 
+    % y=cmro2_regressed';
+    % x=medians_dwi_subj;
+    % idx_nan_y=find(isnan(y));
+    % idx_nan_x=find(isnan(x));
+    % idx_nan = unique(cat(2,idx_nan_y,idx_nan_x));
+    % y(idx_nan)=[];
+    % x(idx_nan)=[];
+    % % Fit a quadratic equation
+    % pol = polyfit(x, y, 1);
+    % % Evaluate the fitted polynomial
+    % y_fit = polyval(pol, x);
+    % % Calculate the R-squared value
+    % Rsquared = 1 - sum((y - y_fit).^2) / sum((y - nanmean(y)).^2);
+    % Rsquared
+    % 
+    % [x_sorted,index] = sortrows(x');
+    % y_fit=y_fit';
+    % y_fit_sorted = y_fit(index);
+    % 
+    % s=subplot(5,6,i)   
+    % plot(medians_dwi_subj, cmro2_regressed,'.')
+    % hold on
+    % plot(x_sorted,y_fit_sorted,'--','LineWidth',3,'Color',"#000000");
+    % xlabel('f_s','FontWeight','bold');
+    % ylabel(strcat('CMRO_2'),'FontWeight','bold');
+    % title(strcat('subj-',num2str(i)))
+    % grid on
 end
 % Error using statrobustfit (line 21)
 % Not enough points to perform robust estimation.
@@ -1089,7 +1241,7 @@ s.FaceColor="b";
 xlabel('Estimates','FontWeight','bold','FontSize',15);
 ylabel('Counts (# subjects)','FontWeight','bold','FontSize',15);
 title('regression coefficients estimates')
-ylim([0,9]);
+ylim([0,10]);
 xlim([-0.6,0.6])
 xline(0,'--','LineWidth',3);
 % if p<0.05 && p>0.01    
@@ -1106,11 +1258,25 @@ xline(0,'--','LineWidth',3);
 % text(-0.5,7,txt, 'FontWeight', 'bold','FontSize',15);
 grid on
 
-[h,p]=ttest(estimate_microparameter_subjs);%1 rejects the null hypothesis that the mean is equal to 0.
+disp('Regression coefficients distribution (ttest)')
+[h,p]=ttest(estimate_microparameter_subjs)%1 rejects the null hypothesis that the mean is equal to 0.
 
-median_estimate = median(estimate_microparameter_subjs);
+median_estimate = median(estimate_microparameter_subjs)
+mean_estimate = mean(estimate_microparameter_subjs)
+std_estimate = std(estimate_microparameter_subjs)
+
+% save variable for the diff analysis
+if strcmp(micro_parameter,'Rsoma')   
+    estimate_microparameter_subjs_rsoma=estimate_microparameter_subjs;
+elseif strcmp(micro_parameter,'fsoma')
+    estimate_microparameter_subjs_fsoma=estimate_microparameter_subjs;
+elseif strcmp(micro_parameter,'fsup')
+    estimate_microparameter_subjs_fsup=estimate_microparameter_subjs;
+elseif strcmp(micro_parameter,'fc')
+    estimate_microparameter_subjs_fc=estimate_microparameter_subjs;
+end
+
 median_pvalue = median(pvalue_microparameter_subjs);
-std_estimate = std(estimate_microparameter_subjs);
 std_pvalue = std(pvalue_microparameter_subjs);
 
 mean_with_subjs_corr=nanmean(corr_for_each_subjs_regout_pves);%with fsup we could have NaNs
@@ -1167,12 +1333,80 @@ grid on
 
 [h,p]=ttest(estimate_microparameter_subjs(pvalue_microparameter_subjs>0.05))
 
+%% distribution of differences of correlation between CMRO2 vs fs and SAD and CMRO2 vs NAD
+
+% % to run this section you must save variables and load them 
+% % CMRO2 vs SAD,fsoma,Rsoma - CMRO2 vs NAD
+% 
+% %choose variables
+% x1 = 'Rsoma';
+% x2 = 'fsup';
+% 
+% if strcmp(x1, 'Rsoma')
+%     estimate_x1 = '\alpha_1';
+%     fisher_transformed_x1 = estimate_microparameter_subjs_rsoma;
+% elseif strcmp(x1, 'fsoma')
+%     estimate_x1 = '\beta_1';
+%     fisher_transformed_x1 = estimate_microparameter_subjs_fsoma;
+% elseif strcmp(x1, 'fsup')
+%     estimate_x1 = '\gamma_1';
+%     fisher_transformed_x1 = estimate_microparameter_subjs_fsup;
+% elseif strcmp(x1, 'fc')
+%     estimate_x1 = '\delta_1';
+%     fisher_transformed_x1 = estimate_microparameter_subjs_fc;
+% end
+% 
+% if strcmp(x2, 'Rsoma')
+%     estimate_x2 = ' \alpha_1';
+%     fisher_transformed_x2 = estimate_microparameter_subjs_rsoma;
+% elseif strcmp(x2, 'fsoma')
+%     estimate_x2 = ' \beta_1';
+%     fisher_transformed_x2 = estimate_microparameter_subjs_fsoma;
+% elseif strcmp(x2, 'fsup')
+%     estimate_x2 = ' \gamma_1';
+%     fisher_transformed_x2 = estimate_microparameter_subjs_fsup;
+% elseif strcmp(x2, 'fc')
+%     estimate_x2 = ' \delta_1';
+%     fisher_transformed_x2 = estimate_microparameter_subjs_fc;
+% end
+% 
+% 
+% %change
+% diff = fisher_transformed_x1-fisher_transformed_x2;
+% 
+% %plot
+% figure, 
+% s=histogram(diff,'FaceAlpha',1,'BinWidth',0.07);
+% s.FaceColor="b";
+% xlabel(strcat(estimate_x1,' - ',estimate_x2),'FontWeight','bold','FontSize',15);
+% ylabel('Counts (# subjects)','FontWeight','bold','FontSize',15);
+% % title('CMRO_2 vs SAD - CMRO_2 vs NAD')
+% ylim([0,13]);
+% xlim([-0.6,0.6])
+% xline(0,'--','LineWidth',3);
+% % if p<0.05 && p>0.01    
+% %     txt = {strcat('\mu_r = ',mean_corr,'*')};
+% % elseif p<0.01 && p>0.001   
+% %     txt = {strcat('\mu_r = ',mean_corr,'**')};
+% % elseif p<0.001
+% %     txt = {strcat('\mu_r = ',mean_corr,'***')};
+% % elseif p>0.05
+% %         txt = {strcat('\mu_r = ',mean_corr,'')};
+% % end
+% 
+% % title(strcat(energy_parameter, 'vs',micro_parameter));
+% % text(-0.5,7,txt, 'FontWeight', 'bold','FontSize',15);
+% grid on
+% 
+% disp(strcat(x1,' vs ',x2))
+% [h,p]=ttest(diff)
+
 %% across subjs for each region
 % check correlation distribution 
 
 disp('correlation across subjects for each region')
 
-n_regions_final = numel(labels_final);
+n_regions_final = numel(labels_final_original);
 
 z=[];
 pvalue=[];
@@ -1191,11 +1425,44 @@ for i = 1:n_regions_final
     std_dev_dwi(end+1)=std(medians_dwi(:,i));
 
     % calculate corr regressing out variables
+    medians_dwi_region = medians_dwi(:,i);
+    means_pve_0_dwi_region = means_pve_0_dwi(:,i);
+    means_pve_2_dwi_region = means_pve_2_dwi(:,i);
+    medians_func_region = medians_func(:,i);
+    
+    %%%%%
+    %find idx of nans
+    idx_dwi = find(isnan(medians_dwi_region));
+    if isempty(idx_dwi)
+        idx_dwi=[];
+    end
+    idx_pve_0 = find(isnan(means_pve_0_dwi_region));
+    if isempty(idx_pve_0)
+        idx_pve_0=[];
+    end
+    idx_pve_2 = find(isnan(means_pve_2_dwi_region));
+    if isempty(idx_pve_2)
+        idx_pve_2=[];
+    end
+    idx_func = find(isnan(medians_func_region));
+    if isempty(idx_func)
+        idx_func=[];
+    end
+
+    idx_tot = unique(cat(1,idx_dwi,idx_pve_0,idx_pve_2,idx_func));
+
+    %remove nans
+    medians_dwi_region(idx_tot)=[];
+    means_pve_0_dwi_region(idx_tot)=[];
+    means_pve_2_dwi_region(idx_tot)=[];
+    medians_func_region(idx_tot)=[];
+    %%%%%
+
     %zscore
-    medians_dwi_scored = nanzscore(medians_dwi(:,i));
-    means_pve_0_dwi_scored = nanzscore(means_pve_0_dwi(:,i));
-    means_pve_2_dwi_scored = nanzscore(means_pve_2_dwi(:,i));
-    medians_energy_scored = nanzscore(medians_func(:,i));
+    medians_dwi_scored = nanzscore(medians_dwi_region);
+    means_pve_0_dwi_scored = nanzscore(means_pve_0_dwi_region);
+    means_pve_2_dwi_scored = nanzscore(means_pve_2_dwi_region);
+    medians_energy_scored = nanzscore(medians_func_region);
     
     medians_dwi_scored_tr = medians_dwi_scored';
     means_pve_0_dwi_scored_tr = means_pve_0_dwi_scored';
@@ -1206,36 +1473,43 @@ for i = 1:n_regions_final
 
     tbl=table(medians_energy_scored_tr',medians_dwi_scored_tr',means_pve_0_dwi_scored_tr',means_pve_2_dwi_scored_tr', 'VariableNames', ...
         {'CMRO2','microparameter','pve_0_dwi','pve_2_dwi'});
+
     %build your model
-    mdl=fitlm(tbl,'CMRO2 ~ microparameter + pve_0_dwi + pve_2_dwi','RobustOpts','off');
 
-    coeffs_mat=table2array(mdl.Coefficients);
-
-    if anynan(coeffs_mat)
+    if isempty(tbl)
         disp('do nothing')
     else
-        disp('append correlation coefficient')
-        %reg out
-        pve_0_estimate = coeffs_mat(3,1);
-        pve_2_estimate = coeffs_mat(4,1);
-        cmro2_without_pves = medians_energy_scored_tr - means_pve_0_dwi_scored_tr.*pve_0_estimate - means_pve_2_dwi_scored_tr.*pve_2_estimate;
+        mdl=fitlm(tbl,'CMRO2 ~ microparameter + pve_0_dwi + pve_2_dwi','RobustOpts','off');
+        coeffs_mat=table2array(mdl.Coefficients);
 
-        %calculate corr
 
-        [r_regout,p_regout] = corrcoef(cmro2_without_pves, medians_dwi_scored_tr,'rows','complete');
-        z_regout_pves(end+1)=r_regout(2);
-        pvalue_regout_pves(end+1)=p_regout(2);
-        labels_final_mdlaccepted(end+1)=labels_final(i);
 
-        % if isnan(r_regout(2))
-        %     break
-        % end
-        % if r_regout(2) < -0.9
-        %      break
-        % end
-        % if anynan(coeffs_mat)
-        %      break
-        % end
+        if anynan(coeffs_mat)
+            disp('do nothing')
+        else
+            disp('append correlation coefficient')
+            %reg out
+            pve_0_estimate = coeffs_mat(3,1);
+            pve_2_estimate = coeffs_mat(4,1);
+            cmro2_without_pves = medians_energy_scored_tr - means_pve_0_dwi_scored_tr.*pve_0_estimate - means_pve_2_dwi_scored_tr.*pve_2_estimate;
+
+            %calculate corr
+
+            [r_regout,p_regout] = corrcoef(cmro2_without_pves, medians_dwi_scored_tr,'rows','complete');
+            z_regout_pves(end+1)=r_regout(2);
+            pvalue_regout_pves(end+1)=p_regout(2);
+            labels_final_mdlaccepted(end+1)=labels_final_original(i);
+
+            % if isnan(r_regout(2))
+            %     break
+            % end
+            % if r_regout(2) < -0.9
+            %      break
+            % end
+            % if anynan(coeffs_mat)
+            %      break
+            % end
+        end
     end
 
 end
@@ -1570,6 +1844,8 @@ y_pve_0_dwi = means_pve_0_dwi_scored.*estimate_pve_0;
 y_pve_2_dwi = means_pve_2_dwi_scored.*estimate_pve_2;
 cmro2_regressed_scored = medians_energy_scored-y_pve_0_dwi-y_pve_2_dwi;
 
+%trasform zscored y variable back to original units
+
 cmro2_regressed = cmro2_regressed_scored.*std(medians_CMRO2_GM_subjs)+mean(medians_CMRO2_GM_subjs);
 
  %% method II
@@ -1681,7 +1957,7 @@ elseif strcmp(micro_parameter,'fc')
     text(1.5*10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
 end
 set(gcf,'position',[x0,y0,width,height]);
-ylim([50,190]);
+ylim([40,200]);
 grid on
 
  %% plot spatially regional medians parametric maps
