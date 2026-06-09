@@ -2,14 +2,24 @@
 %(the atlas has been warped from mni space to the subject space so we could
 %have lost some labels, so this programme select only common labels).
 
+%% HOW TO USE
+%the code must be run 4 times:
+%one selecting Rsoma, one selecting fsoma, one selecting fsup
+%and one selecting fc.
+
 %% load data already "cooked"
 % load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans')
 % load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking')
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions')
+% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions_andfromGM.mat')
+% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
+
+%load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_NOTremovingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
+load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/260531/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_NOTremovingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
 
 %% select variables to examine
 energy_parameter = 'CMRO2';
-micro_parameter = 'fc';
+micro_parameter = 'Rsoma';
 
 %% remove uncommon labels between subjects and between spaces
 %% select matrices
@@ -139,7 +149,7 @@ for row = 1:n_subjs
     n_voxels_dwi_final(row,:)=n_voxels_dwi_row_final;
 end
 
-%% if you have MSE
+%% if you want to analyze SANDI MSE
 % %these matrices are needed to check if at higher variability correspond
 % %high mse median regional values.
 % 
@@ -291,18 +301,35 @@ end
 
 %% select common elements between the two spaces
 
+%note: in case of WAND data, the rows of labels_dwi_subjs_final
+%and labels_func_subjs_final are equal, so the difference
+%lies between spaces.
+
+% %old
+% commonElements_lst=[];
+% for row = 1:n_subjs
+%     commonElements = intersect(labels_dwi_subjs_final(row,:),labels_func_subjs_final(row,:));
+%     if length(commonElements)>1
+%         commonElements_lst(1,:)=commonElements;%BUG
+%     else
+%         commonElements_lst(end+1)=commonElements;
+%     end
+% end
+
 commonElements_lst=[];
 for row = 1:n_subjs
     commonElements = intersect(labels_dwi_subjs_final(row,:),labels_func_subjs_final(row,:));
     if length(commonElements)>1
-        commonElements_lst(1,:)=commonElements;
+        commonElements_lst(row,:)=commonElements;
     else
         commonElements_lst(end+1)=commonElements;
     end
 end
 
 commonElements_lst=unique(commonElements_lst);
-commonElements(commonElements==0)=[];
+% commonElements_lst(commonElements_lst==0)=[];
+
+commonElements_lst = commonElements_lst';
 
 %% dwi space
 %First, detect indices of common Elements
@@ -310,8 +337,8 @@ commonElements(commonElements==0)=[];
 lst_idx_matrix_dwi_spaces=[];
 for row = 1:n_subjs
     lst_idx_row=[];
-    for i = 1:length(commonElements)
-        commonElement = commonElements(i);
+    for i = 1:length(commonElements_lst)
+        commonElement = commonElements_lst(i);
         idx = find(labels_dwi_subjs_final(row,:) == commonElement);
         % if length(idx)>1
         %     lst_idx_row(1,:)=idx;
@@ -433,8 +460,8 @@ end
 lst_idx_matrix_func_spaces=[];
 for row = 1:length(labels_func_subjs_final(:,1))
     lst_idx_row=[];
-    for i = 1:length(commonElements)
-        commonElement = commonElements(i);
+    for i = 1:length(commonElements_lst)
+        commonElement = commonElements_lst(i);
         idx = find(labels_func_subjs_final(row,:) == commonElement);
         % if length(idx)>1
         %     lst_idx_row(1,:)=idx;
@@ -517,7 +544,7 @@ end
 
 %% informal testing
 %isequal(labels_func_subjs_final_spaces,labels_dwi_subjs_final_spaces)
-
+%isequal(CMRO2 for all microstructural parameters).
 
 %% save the following parameters
 
@@ -544,3 +571,19 @@ elseif strcmp(micro_parameter,'fsup')
 elseif strcmp(micro_parameter,'fc')
     medians_dwi = medians_fc_subjs_final_spaces;
 end
+
+
+
+% medians_CMRO2_GM_subjs
+% medians_fsoma_GM_subjs
+% medians_fsup_GM_subjs
+% medians_rsoma_GM_subjs
+% medians_fc_GM_subjs
+% means_pve_0_dwi_GM_subjs
+% means_pve_0_func_GM_subjs
+% means_pve_1_dwi_GM_subjs
+% means_pve_1_func_GM_subjs
+% means_pve_2_dwi_GM_subjs
+% means_pve_2_func_GM_subjs
+% V_atlas_glass  
+% n_voxels_dwi_final_spaces
