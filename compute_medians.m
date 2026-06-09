@@ -2,39 +2,58 @@
 
 %% select which type of masking apply
 rois = 'not complete'; %without any kind of masking, otherwise choose 'complete'  
-masking = 'GM'; %masking only by GM, otherwise choose 'all'
-mse_threshold = 'yes';
+masking = 'GM'; %masking only by GM, otherwise choose 'all' and it will mask using both WM and CSF
+mse_threshold = 'yes';%no
 mse_threshold_value=85;
 
 %pve_1 = GM,
 %pve_0 = CSF,
 %pve_2 = WM.
 %% select binary masks thresholds
-pve_1_threshold=0.5;
 
+%% GM and fsoma
+
+pve_1_threshold=0.5;
 fsoma_threshold=0.15;
-%%
+
+%% select CSF AND WM thresholds
+% ATTENTION: if you select type of masking GM, these thresholds;
 %change these thresholds values between 0.1 and 1
-pve_0_threshold_func=1;%threshold before which the CSF is set to 0
+
+pve_0_threshold_func=1;
 pve_2_threshold_func=1;
-pve_0_threshold_dwi=0.3;%
-pve_2_threshold_dwi=1;%
+pve_0_threshold_dwi=0.3;
+pve_2_threshold_dwi=1;
 
 %% set rsoma limit for fc and fsup calculation
+
 rsoma_upper_limit=7; %7 micrometer is good for WAND data.%11.1 for Chieti
+%lower values of Rsoma would lead to infinite values of fc and fsup
 
 %% load data
 % load subjs idx
-%run='run-01';
-subjects = importdata(strcat('/home/c25078236/Desktop/WAND_data/subjects.txt'));
+
+
+%% Vitality
+% %select .txt file of subjects
+% run='run-01';
+% subjects = importdata('/media/nas_rete/Work_manuela/EMI_model-main/Vitality_subjs_ageandsexmatched.txt');
+
+%% WAND data
+
+% subjects = importdata(strcat('/home/c25078236/Desktop/WAND_data/subjects.txt'));
+subjects = importdata(strcat('/media/nas_rete/Work_manuela/WAND_data/subjects.txt'));
 subjects(subjects==42565)=[];%subj that does not have mprage
 subjects(subjects==19230)=[];%subj that does not have b0
 subjects(subjects==20609)=[];%subj that does not have M0
 subjects(subjects==69881)=[];%subj that does not have SANDI MAPS
+
+%%
 n_subjs=length(subjects);
 start_subj=1;
-%%
-%load pve on subj space
+
+%% load pve maps on subj space
+
 V_pves_0_dwi={};
 V_pves_1_dwi={};
 V_pves_2_dwi={};
@@ -43,7 +62,19 @@ V_pves_1_func={};
 V_pves_2_func={};
 
 for i = start_subj:n_subjs
-    
+
+%%%%%%%subjects string numbers must be modified
+    %Vitality 
+%     subj = subjects(i);
+%     subj=num2str(subj);
+%     if numel(subj)==1
+%         subj=strcat('00',subj);
+%     elseif numel(subj)==2
+%         subj=strcat('0',subj);
+%     end
+%   
+    %WAND data
+
     subj = subjects(i);
     subj=num2str(subj);
     if numel(subj)==4
@@ -52,16 +83,44 @@ for i = start_subj:n_subjs
         subj=subj;
     end
 
-    % img_path_pve_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/pve_on_b0/',subj,'_',run,'_PVE_1_on_b0.nii.gz');
-    % img_path_pve_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/pve_on_M0/',subj,'_',run,'_PVE_1_on_M0.nii.gz');
-    img_path_pve_0_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
-    img_path_pve_0_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
+%%%%%%%write the files paths
 
-    img_path_pve_1_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
-    img_path_pve_1_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
- 
-    img_path_pve_2_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
-    img_path_pve_2_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
+% Vitality
+
+%     img_path_pve_0_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/pve_on_b0_250923/sub-',subj,'_run-01_PVE_0_on_b0.nii.gz');
+%     img_path_pve_0_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/pve_on_M0/sub-',subj,'_run-01_PVE_0_on_M0.nii.gz');
+%   
+%     img_path_pve_1_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/pve_on_b0_250923/sub-',subj,'_run-01_PVE_1_on_b0.nii.gz');
+%     img_path_pve_1_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/pve_on_M0/sub-',subj,'_run-01_PVE_1_on_M0.nii.gz');
+% 
+%     img_path_pve_2_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/pve_on_b0_250923/sub-',subj,'_run-01_PVE_2_on_b0.nii.gz');
+%     img_path_pve_2_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/pve_on_M0/sub-',subj,'_run-01_PVE_2_on_M0.nii.gz');
+
+% WAND in itab computer
+
+    img_path_pve_0_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
+    img_path_pve_0_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
+  
+    img_path_pve_1_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
+    img_path_pve_1_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
+
+    img_path_pve_2_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
+    img_path_pve_2_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
+
+
+% WAND data in Cubric computer
+
+%     img_path_pve_0_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
+%     img_path_pve_0_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
+% 
+%     img_path_pve_1_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
+%     img_path_pve_1_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
+%  
+%     img_path_pve_2_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
+%     img_path_pve_2_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
+
+
+%%%% SPM reads volumes and save them in a cell
 
     V_vol_pve_dwi = spm_vol(img_path_pve_0_dwi);
     V_pve_dwi=spm_read_vols(V_vol_pve_dwi);
@@ -107,13 +166,24 @@ end
 % 
 % V_refined = V_pves_0_dwi_first.*V_pves_1_dwi_first;
 % figure, imagesc(V_refined(:,:,45))
+
 %%
 %load atlas on subj space
 V_atlases_dwi={};
 V_atlases_func={};
 
 for i = start_subj:n_subjs
-    
+
+    % Vitality
+%     subj = subjects(i);
+%     subj=num2str(subj);
+%     if numel(subj)==1
+%         subj=strcat('00',subj);
+%     elseif numel(subj)==2
+%         subj=strcat('0',subj);
+%     end
+%     
+    % WAND data
     
     subj = subjects(i);
     subj=num2str(subj);
@@ -123,11 +193,25 @@ for i = start_subj:n_subjs
         subj=subj;
     end
 
-    
-    % img_path_atlas_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/atlas_on_b0/AAL3v1_2mm_on_',subj,'_',run,'_acq-dwi_B0_brain_corr.nii.gz');
-    % img_path_atlas_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/atlas_on_M0/AAL3v1_2mm_on_',subj,'_task-bh_',run,'_acq-dexi_M0.nii.gz');
-    img_path_atlas_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
-    img_path_atlas_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
+%%%%%%%write the files paths
+
+% Vitality
+
+%     img_path_atlas_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/atlas_on_b0/AAL3v1_2mm_on_sub-',subj,'_run-01_acq-dwi_B0_brain_corr.nii.gz');
+%     img_path_atlas_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/atlas_on_M0/AAL3v1_2mm_on_sub-',subj,'_task-bh_run-01_acq-dexi_M0.nii.gz');
+
+% WAND in itab computer  
+
+    img_path_atlas_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
+    img_path_atlas_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
+
+% WAND data in Cubric computer
+
+%   img_path_atlas_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
+%   img_path_atlas_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
+
+
+%%%% SPM reads volumes and save them in a cell 
 
     V_vol_atlas_dwi = spm_vol(img_path_atlas_dwi);
     V_atlas_dwi=spm_read_vols(V_vol_atlas_dwi);
@@ -153,28 +237,56 @@ V_fextra_maps={};
 V_mse_maps={};
 
 for i = start_subj:n_subjs
+
+% Vitality
+%     subj = subjects(i);
+%     subj=num2str(subj);
+%     if numel(subj)==1
+%         subj=strcat('00',subj);
+%     elseif numel(subj)==2
+%         subj=strcat('0',subj);
+%     end
     
-        
-    subj = subjects(i);
-    subj=num2str(subj);
-    if numel(subj)==4
-        subj=strcat('0',subj);
-    else
-        subj=subj;
+% WAND
+        subj = subjects(i);
+        subj=num2str(subj);
+        if numel(subj)==4
+            subj=strcat('0',subj);
+        else
+            subj=subj;
+        end
+
+%%%%%%%write the files paths
+
+% WAND in itab storage
+    img_path_CMRO2=strcat('/media/nas_rete/Work_manuela/WAND_data/FUNC/CMRO2/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
+    img_path_rsoma=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
+    img_path_fsoma=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
+    img_path_fneurite=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
+    img_path_De=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
+    img_path_Din=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
+    img_path_fextra=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
+    if strcmp(mse_threshold,'yes')
+        img_path_mse=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
     end
 
-    
+% Vitality   
+
 %     img_path_CMRO2=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/perf/outcome/',subj,'_task-bh_',run,'_acq-dexi_volreg_asl_topup_CMRO2_map.nii.gz');
 %     img_path_CBF=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/perf/outcome/',subj,'_task-bh_',run,'_acq-dexi_volreg_asl_topup_CBF_map.nii.gz');
+% 
+%     img_path_rsoma=strcat('/media/nas_rete/Vitality/derivatives/sub-',subj,'/dwi/SANDI_N4Output/sub-',subj,'_',run,'_SANDI-fit_Rsoma.nii.gz');
+%     img_path_fsoma=strcat('/media/nas_rete/Vitality/derivatives/sub-',subj,'/dwi/SANDI_N4Output/sub-',subj,'_',run,'_SANDI-fit_fsoma.nii.gz');
+%     img_path_fneurite=strcat('/media/nas_rete/Vitality/derivatives/sub-',subj,'/dwi/SANDI_N4Output/sub-',subj,'_',run,'_SANDI-fit_fneurite.nii.gz');
+%     img_path_De=strcat('/media/nas_rete/Vitality/derivatives/sub-',subj,'/dwi/SANDI_N4Output/sub-',subj,'_',run,'_SANDI-fit_De.nii.gz');
+%     img_path_Din=strcat('/media/nas_rete/Vitality/derivatives/sub-',subj,'/dwi/SANDI_N4Output/sub-',subj,'_',run,'_SANDI-fit_Din.nii.gz');
+%     img_path_fextra=strcat('/media/nas_rete/Vitality/derivatives/sub-',subj,'/dwi/SANDI_N4Output/sub-',subj,'_',run,'_SANDI-fit_fextra.nii.gz');
+%     if strcmp(mse_threshold,'yes')
+%         img_path_mse=strcat('/media/nas_rete/Vitality/derivatives/sub-',subj,'/dwi/SANDI_N4Output/sub-',subj,'_',run,'_SANDI-fit_mse.nii.gz');
+%     end
 
-%     img_path_rsoma=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/dwi/SANDI_Output/',subj,'_',run,'_SANDI-fit_Rsoma.nii.gz');
-%     img_path_fsoma=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/dwi/SANDI_Output/',subj,'_',run,'_SANDI-fit_fsoma.nii.gz');
-%     img_path_fneurite=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/dwi/SANDI_Output/',subj,'_',run,'_SANDI-fit_fneurite.nii.gz');
-%     img_path_De=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/dwi/SANDI_Output/',subj,'_',run,'_SANDI-fit_De.nii.gz');
-%     img_path_Din=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/dwi/SANDI_Output/',subj,'_',run,'_SANDI-fit_Din.nii.gz');
-%     img_path_fextra=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/dwi/SANDI_Output/',subj,'_',run,'_SANDI-fit_fextra.nii.gz');
-%     img_path_mse=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/dwi/SANDI_Output/',subj,'_',run,'_SANDI-fit_mse.nii.gz');
-    % 
+% Vitality with sandi new realease Vitality
+
     % img_path_CMRO2=strcat('/media/nas_rete/Vitality/derivatives/',subj,'/perf/outcome/',subj,'_task-bh_',run,'_acq-dexi_volreg_asl_topup_CMRO2_map.nii.gz');
     % 
     % img_path_rsoma=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_Rsoma.nii.gz');
@@ -184,18 +296,24 @@ for i = start_subj:n_subjs
     % img_path_Din=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_Din.nii.gz');
     % img_path_fextra=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_fextra.nii.gz');
     % img_path_mse=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_mse.nii.gz');
-    img_path_CMRO2=strcat('/home/c25078236/Desktop/WAND_data/FUNC/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
-    % 
-    img_path_rsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
-    img_path_fsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
-    img_path_fneurite=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
-    img_path_De=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
-    img_path_Din=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
-    img_path_fextra=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
-    %img_path_mse=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_mse.nii.gz');
-    if strcmp(mse_threshold,'yes')
-        img_path_mse=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
-    end
+ 
+% WAND in cubric computer
+
+%     img_path_CMRO2=strcat('/home/c25078236/Desktop/WAND_data/FUNC/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
+%     % 
+%     img_path_rsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
+%     img_path_fsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
+%     img_path_fneurite=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
+%     img_path_De=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
+%     img_path_Din=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
+%     img_path_fextra=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
+%     %img_path_mse=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_mse.nii.gz');
+%     if strcmp(mse_threshold,'yes')
+%         img_path_mse=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
+%     end
+
+%%%% SPM reads volumes and save them in a cell 
+
     V_vol_CMRO2 = spm_vol(img_path_CMRO2);
     V_CMRO2=spm_read_vols(V_vol_CMRO2);
     V_CMRO2_maps{end+1}=V_CMRO2;
@@ -207,6 +325,9 @@ for i = start_subj:n_subjs
     V_vol_rsoma = spm_vol(img_path_rsoma);
     V_rsoma=spm_read_vols(V_vol_rsoma);
     V_rsoma_maps{end+1}=V_rsoma;
+
+    %save the total number of voxels
+    SANDI_map_size = numel(V_rsoma);
 
     V_vol_fsoma = spm_vol(img_path_fsoma);
     V_fsoma=spm_read_vols(V_vol_fsoma);
@@ -236,8 +357,7 @@ for i = start_subj:n_subjs
     end
 end
 
-
-
+disp('xoxoxxoxoxxoxoxxoxox end of loading ^_^ xoxoxxoxoxxoxoxxoxox')
 
 %% number of cells density map (many subjects) 
 
@@ -266,6 +386,9 @@ for i = 1:n_subjs
     V_fsoma_to_mask(V_fsoma_to_mask>fsoma_threshold)=1;
     V_fsoma_to_mask(V_fsoma_to_mask<1)=0;
 
+    %%%%%%%%%%%if you mask using only GM, the following lines will not be
+    %%%%%considered
+
     % %in case you want all the WM
     % V_pve_2_dwi(V_pve_2_dwi==0)=NaN;
     % V_pve_2_dwi(V_pve_2_dwi>0)=0;
@@ -285,6 +408,8 @@ for i = 1:n_subjs
     V_pve_0_dwi(V_pve_0_dwi<pve_0_threshold_dwi)=NaN;
     V_pve_0_dwi(V_pve_0_dwi>=pve_0_threshold_dwi)=0;
     V_pve_0_dwi(isnan(V_pve_0_dwi))=1;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %MASKING
     if strcmp(masking,'GM')
@@ -315,13 +440,13 @@ for i = 1:n_subjs
 
 end
 
-% %find a method to remove too much high values at the borders.
+%check
 fc_1=V_fc_maps{1};
-figure, imagesc(rot90(fc_1(:,:,40)))
+figure, imagesc(rot90(fc_1(:,:,33)))
 title('Numerical soma density')
 % clim([10^12,10^14])
 
-%a further method to remove hyperintensities: look at the MSE.
+%a further method to remove hyperintensities (mainly at the borders): look at the MSE.
 %% save fc of one subj as nifti
 % img_path='/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-97902/SANDI_Output/SANDI-fit_Rsoma.nii.gz';
 % hdr=niftiinfo(img_path);
@@ -357,6 +482,9 @@ for i = 1:n_subjs
     V_fsoma_to_mask(V_fsoma_to_mask>fsoma_threshold)=1;
     V_fsoma_to_mask(V_fsoma_to_mask<1)=0;
 
+    %%%%%%%%%%%if you mask using only GM, the following lines will not be
+    %%%%%considered
+
     % %in case you want all the WM
     % V_pve_2_dwi(V_pve_2_dwi==0)=NaN;
     % V_pve_2_dwi(V_pve_2_dwi>0)=0;
@@ -376,6 +504,8 @@ for i = 1:n_subjs
     V_pve_0_dwi(V_pve_0_dwi<pve_0_threshold_dwi)=NaN;
     V_pve_0_dwi(V_pve_0_dwi>=pve_0_threshold_dwi)=0;
     V_pve_0_dwi(isnan(V_pve_0_dwi))=1;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %MASKING
     if strcmp(masking,'GM')
@@ -406,6 +536,7 @@ for i = 1:n_subjs
 
 end
 
+%check
 V_fsup_one=V_fsup_maps{1};%.*10^(-6);
 figure, imagesc(rot90(V_fsup_one(:,:,40)));
 title('Superficial Soma Density map')
@@ -416,24 +547,23 @@ title('Superficial Soma Density map')
 % % grid on
 
 %%  Count total number of regions
-% img_path_atlas='/storage/shared/Atlas/AAL3v1_2mm_resampled.nii.gz';
-img_path_atlas='/home/c25078236/Desktop/WAND_data/AAL3/AAL3v1_1mm.nii.gz';
+img_path_atlas='/storage/shared/Atlas/AAL3v1_2mm_resampled.nii.gz';
+% img_path_atlas='/home/c25078236/Desktop/WAND_data/AAL3/AAL3v1_1mm.nii.gz';
 Vhdr = spm_vol(img_path_atlas);
 V_atlas_tot = spm_read_vols(Vhdr);
 
 regions = unique(V_atlas_tot(:));
-%background removal
-regions(1)=[];
+% %background removal
+% regions(1)=[];
 n_regions=numel(regions);
 
 %%
-%atlas for church glass images
-img_path_atlas='/home/c25078236/Desktop/saved_workspace/atlas_to_send/AAL3v1_2mm_resampled.nii.gz';
-Vhdr = spm_vol(img_path_atlas);
+% save atlas for "church glass" images
+
 V_atlas_glass = spm_read_vols(Vhdr);
 
 %% in case you don't have the original atlas
-n_regions=166;%it is needed to built the empty matrix (you need to know the maximum length. If it's higher, it isn't a problem).
+% n_regions=166;%it is needed to built the empty matrix (you need to know the maximum length. If it's higher, it isn't a problem).
 
 %% compute medians 
 %prepare empty matrices with maximum size 
@@ -444,6 +574,7 @@ n_regions=166;%it is needed to built the empty matrix (you need to know the maxi
 
 %you can loose some labels (?) when warping in subject space
 %so for each space and for each subject I checked which labels we have
+
 labels_func_subjs = zeros(n_subjs,n_regions);
 labels_dwi_subjs = zeros(n_subjs,n_regions);
 
@@ -461,9 +592,9 @@ medians_Din_subjs = zeros(n_subjs,n_regions);
 medians_De_subjs = zeros(n_subjs,n_regions);
 
 percentage_zeros_CMRO2_subjs = zeros(n_subjs,n_regions);
-%percentage_unphysical_CBF_subjs = zeros(n_subjs,n_regions); 
+% percentage_unphysical_CBF_subjs = zeros(n_subjs,n_regions); 
 percentage_nans_CMRO2_subjs = zeros(n_subjs,n_regions);
-%percentage_nans_CBF_subjs = zeros(n_subjs,n_regions); 
+% percentage_nans_CBF_subjs = zeros(n_subjs,n_regions); 
 percentage_high_MSE_microparameter_subjs = zeros(n_subjs,n_regions); 
 percentage_high_MSE_rsoma_subjs = zeros(n_subjs,n_regions);
 
@@ -508,6 +639,8 @@ means_pve_0_dwi_GM_subjs = []; %attention: if you want the same analysis also fo
 means_pve_1_dwi_GM_subjs = [];
 means_pve_2_dwi_GM_subjs = [];
 
+V_rsoma_GM_masked_subjs = zeros(n_subjs,SANDI_map_size);
+
 start_time=tic;
 for subj = 1:n_subjs
     tic
@@ -540,7 +673,7 @@ for subj = 1:n_subjs
 
     %where to save parametric medians and PVE means
     medians_CMRO2_subj = [];
-    medians_CBF_subj = [];
+%     medians_CBF_subj = [];
     medians_rsoma_subj = [];
     medians_fsoma_subj = [];
     medians_fc_subj = [];
@@ -576,6 +709,11 @@ for subj = 1:n_subjs
     V_pve_1_dwi_fs_mean_subj = [];
     V_pve_2_dwi_fs_mean_subj = [];
 
+    n_zeros_rsoma_subj = [];
+    n_zeros_fsoma_subj = [];
+    n_zeros_fc_subj = [];
+    n_zeros_fsup_subj = [];
+
     if strcmp(mse_threshold,'yes')
         V_MSE = V_mse_maps{subj}; %MSE
         medians_mse_subj = []; %MSE
@@ -592,6 +730,10 @@ for subj = 1:n_subjs
     %define binary mask which is different for each subject
     V_pve_1_func(V_pve_1_func>pve_1_threshold)=1;
     V_pve_1_func(V_pve_1_func<1)=0;
+
+
+%%%%%%%%%%% The following lines of codes will be considered only
+%%%%% if you decide to mask by WM and CSF.
 
     %In case you want to mask by considering not all the WM
     V_pve_2_func(V_pve_2_func<pve_2_threshold_func)=NaN;    
@@ -612,6 +754,7 @@ for subj = 1:n_subjs
     % V_pve_0_func(V_pve_0_func==0)=NaN;
     % V_pve_0_func(V_pve_0_func>0)=0;
     % V_pve_0_func(isnan(V_pve_0_func))=1;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %loop over regions
     %list of regions (it can vary among subjs and among spaces)
@@ -619,7 +762,8 @@ for subj = 1:n_subjs
     %background removal
     regions_func(1)=[];
     n_regions_func=numel(regions_func);
-
+      
+    %prepare the matrix where to save the regional mask 
     V_atlas_mask_func=V_atlas_func; 
     
     for region = 1:n_regions_func
@@ -660,6 +804,7 @@ for subj = 1:n_subjs
 
 
     %%%%%%%%%count how many zeros and NaN inside the regions 
+
     %count number of zeros in CMRO2 region
     CMRO2_zeros = find(V_CMRO2_masked==0);    
     %count how many voxels we remove
@@ -694,7 +839,10 @@ for subj = 1:n_subjs
 %     percentage_nans_CBF_subj(end+1)=percentage_nans_CBF;
 
     %%%%%%%%%compute medians
-    V_CMRO2_masked(V_CMRO2_masked==0)=NaN;
+
+%   %do not consider residual zeros
+%   V_CMRO2_masked(V_CMRO2_masked==0)=NaN;
+
     medians_CMRO2_subj(end+1) = nanmedian(V_CMRO2_masked);
     % medians_CBF_subj(end+1) = nanmedian(V_CBF_masked);
     n_voxels_func_subj(end+1) = numel(V_CMRO2_masked);
@@ -750,11 +898,13 @@ for subj = 1:n_subjs
 
     %%%%for the analysis across subjs, considering the whole GM
     %you don't have to calculate it inside the regional loop
+
     V_CMRO2_masked_GM = V_CMRO2.*V_GM; 
     GM_func_zeros = find(V_GM==0);
     V_CMRO2_masked_GM(GM_func_zeros)=[];
    
-    V_CMRO2_masked_GM(V_CMRO2_masked_GM==0)=NaN;
+%    %do not consider residual zeros
+%     V_CMRO2_masked_GM(V_CMRO2_masked_GM==0)=NaN;
 
     medians_CMRO2_GM_subjs(end+1) = nanmedian(V_CMRO2_masked_GM);
 
@@ -794,7 +944,9 @@ for subj = 1:n_subjs
 
     V_pve_1_dwi(V_pve_1_dwi>pve_1_threshold)=1;
     V_pve_1_dwi(V_pve_1_dwi<1)=0;
-
+    
+    %%%%%%%%%%%% The following lines of codes will be considered only
+    %%%%%% if you decide to mask by WM and CSF.
     %In case you want to mask by considering not all the WM
     V_pve_2_dwi(V_pve_2_dwi<pve_2_threshold_dwi)=NaN;    
     V_pve_2_dwi(V_pve_2_dwi>=pve_2_threshold_dwi)=0;
@@ -814,14 +966,15 @@ for subj = 1:n_subjs
     % V_pve_0_dwi(V_pve_0_dwi==0)=NaN;
     % V_pve_0_dwi(V_pve_0_dwi>0)=0;
     % V_pve_0_dwi(isnan(V_pve_0_dwi))=1;
-
-
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    
+    %prepare the matrix where to save the regional mask 
     V_atlas_mask_dwi=V_atlas_dwi;
     %binarize atlas
     for region = 1:n_regions_dwi
 
     for ii = 1:length(V_atlas_dwi(:))
-        if V_atlas_dwi(ii) == region
+        if V_atlas_dwi(ii) == regions_dwi(region)
             V_atlas_mask_dwi(ii) = 1;
         else
             V_atlas_mask_dwi(ii) = 0;
@@ -856,6 +1009,9 @@ for subj = 1:n_subjs
     V_fextra_masked = V_fextra.*V_mask_dwi;
     
     %remove background
+
+    %we will need to estimate the high MSE voxels on the same voxels
+    %so at this stage, we remove the common zeros.
     mask_dwi_fs_zeros = find(V_mask_dwi_fs==0);
     mask_dwi_zeros = find(V_mask_dwi==0);
 
@@ -904,16 +1060,31 @@ for subj = 1:n_subjs
  
 
     end
+
     % count number of nans in Rsoma regions
     % attention: there should not be. 
     % you can find some median values equal to NaN because 
     % there are no voxels, so median[]=NaN.
+
     n_rsoma_region_voxels_tot = numel(V_rsoma_masked);
     rsoma_nans=find(isnan(V_rsoma_masked));
     n_rsoma_nans=length(rsoma_nans);
     percentage_nans_rsoma=n_rsoma_nans/n_rsoma_region_voxels_tot;
     percentage_nans_rsoma_subj(end+1)=percentage_nans_rsoma;
 
+    %check and count if there are zeros in microstructural regional
+    %parameters
+
+    n_zeros_rsoma_region = sum(V_rsoma_masked==0);
+    n_zeros_fsoma_region = sum(V_fsoma_masked==0);
+    n_zeros_fc_region = sum(V_fc_masked==0);
+    n_zeros_fsup_region = sum(V_fsup_masked==0);
+
+    n_zeros_rsoma_subj(end+1) = n_zeros_rsoma_region;
+    n_zeros_fsoma_subj(end+1) = n_zeros_fsoma_region;
+    n_zeros_fc_subj(end+1) = n_zeros_fc_region;
+    n_zeros_fsup_subj(end+1) = n_zeros_fsup_region;
+   
     %compute medians and save results
     
     medians_rsoma_subj(end+1) = nanmedian(V_rsoma_masked);
@@ -941,6 +1112,7 @@ for subj = 1:n_subjs
     %calculate PVE regional means
 
     %valid for Rsoma
+
     %select the region
     V_pve_0_dwi_masked_fs = V_pve_0_dwi_original.*V_mask_dwi_fs;
     V_pve_1_dwi_masked_fs = V_pve_1_dwi_original.*V_mask_dwi_fs;
@@ -965,6 +1137,7 @@ for subj = 1:n_subjs
     V_pve_2_dwi_fs_mean_subj(end+1) = V_pve_2_dwi_fs_mean;
 
     %valid for all microparameters except Rsoma
+
     %select the region
     V_pve_0_dwi_masked = V_pve_0_dwi_original.*V_mask_dwi;
     V_pve_1_dwi_masked = V_pve_1_dwi_original.*V_mask_dwi;
@@ -1021,6 +1194,12 @@ for subj = 1:n_subjs
 
     n_voxels_dwi(subj,1:n_regions_dwi) = n_voxels_dwi_subj;
 
+    %zeros
+    n_zeros_rsoma_subjs(subj,1:n_regions_dwi) = n_zeros_rsoma_subj;
+    n_zeros_fsoma_subjs(subj,1:n_regions_dwi) = n_zeros_fsoma_subj;
+    n_zeros_fc_subjs(subj,1:n_regions_dwi) = n_zeros_fc_subj;
+    n_zeros_fsup_subjs(subj,1:n_regions_dwi) = n_zeros_fsup_subj;
+
     %%%%for the analysis across subjs, considering the whole GM
     % here you don't have to be inside the regional for loop
     V_GM_fs = V_GM;%.*V_fsoma_to_mask;
@@ -1044,7 +1223,7 @@ for subj = 1:n_subjs
     %remove background
     V_GM_fs_zeros = find(V_GM_fs==0);
     V_GM_zeros = find(V_GM==0);
-
+% 
     V_rsoma_GM_masked(V_GM_fs_zeros)=[];
     V_fsoma_GM_masked(V_GM_zeros)=[];
     V_fc_GM_masked(V_GM_zeros)=[];
@@ -1059,14 +1238,16 @@ for subj = 1:n_subjs
     V_pve_1_dwi_masked_GM(V_GM_zeros)=[];
     V_pve_2_dwi_masked_GM(V_GM_zeros)=[];
 
-    V_MSE_GM_masked_rsoma = V_MSE.*V_GM_fs; %MSE
-    V_MSE_GM_masked = V_MSE.*V_GM; %MSE
-
-    V_MSE_GM_masked_rsoma(V_GM_fs_zeros)=[]; %MSE
-    V_MSE_GM_masked(V_GM_zeros)=[]; %MSE
 
 
     if strcmp(mse_threshold,'yes')
+
+        V_MSE_GM_masked_rsoma = V_MSE.*V_GM_fs; %MSE
+        V_MSE_GM_masked = V_MSE.*V_GM; %MSE
+
+        V_MSE_GM_masked_rsoma(V_GM_fs_zeros)=[]; %MSE
+        V_MSE_GM_masked(V_GM_zeros)=[]; %MSE
+
         %%%%%%%%find voxels which have MSE higher than Nth percentile
         idx_high_MSE_GM_micropar=find(V_MSE_GM_masked>prctile(V_MSE_GM_masked,mse_threshold_value)); %MSE
         idx_high_MSE_GM_rsoma=find(V_MSE_GM_masked_rsoma>prctile(V_MSE_GM_masked_rsoma,mse_threshold_value)); %MSE
@@ -1087,6 +1268,20 @@ for subj = 1:n_subjs
         V_pve_2_dwi_masked_GM(idx_high_MSE_GM_micropar)=[];
     end
 
+%     %%%% remove residual zeros
+% 
+%     V_rsoma_GM_masked(V_rsoma_GM_masked==0)=[];
+%     V_fsoma_GM_masked(V_fsoma_GM_masked==0)=[];
+%     V_fc_GM_masked(V_fc_GM_masked==0)=[];
+%     V_fsup_GM_masked(V_fsup_GM_masked==0)=[];
+%     
+%     V_fneurite_GM_masked(V_fneurite_GM_masked==0)=[];
+%     V_De_GM_masked(V_De_GM_masked==0)=[];
+%     V_Din_GM_masked(V_Din_GM_masked==0)=[];
+%     V_fextra_GM_masked(V_fextra_GM_masked==0)=[];
+
+    %%%%
+
     medians_rsoma_GM_subjs(end+1) = nanmedian(V_rsoma_GM_masked);
     medians_fsoma_GM_subjs(end+1) = nanmedian(V_fsoma_GM_masked);
     medians_fc_GM_subjs(end+1) = nanmedian(V_fc_GM_masked);
@@ -1100,13 +1295,11 @@ for subj = 1:n_subjs
     means_pve_0_dwi_GM_subjs(end+1) = mean(V_pve_0_dwi_masked_GM(:));
     means_pve_1_dwi_GM_subjs(end+1) = mean(V_pve_1_dwi_masked_GM(:));
     means_pve_2_dwi_GM_subjs(end+1) = mean(V_pve_2_dwi_masked_GM(:));
+
+    V_rsoma_GM_masked_subjs(subj,1:numel(V_rsoma_GM_masked)) = V_rsoma_GM_masked;
     
     toc
     disp(strcat('Finished subject', num2str(subj),'Starting subject', num2str(subj+1)))
 
 end
 timeElapsed = toc(start_time);
-
-
-
-
