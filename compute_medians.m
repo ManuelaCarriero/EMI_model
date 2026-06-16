@@ -5,6 +5,8 @@ rois = 'not complete'; %without any kind of masking, otherwise choose 'complete'
 masking = 'GM'; %masking only by GM, otherwise choose 'all' and it will mask using both WM and CSF
 mse_threshold = 'yes';%no
 mse_threshold_value=85;
+path = '/home/c25078236/Desktop';% /media/nas_rete/Work_manuela
+%for the moment you have to change the paths to the data
 
 %pve_1 = GM,
 %pve_0 = CSF,
@@ -41,8 +43,8 @@ rsoma_upper_limit=7; %7 micrometer is good for WAND data.%11.1 for Chieti
 
 %% WAND data
 
-% subjects = importdata(strcat('/home/c25078236/Desktop/WAND_data/subjects.txt'));
-subjects = importdata(strcat('/media/nas_rete/Work_manuela/WAND_data/subjects.txt'));
+subjects = importdata(strcat(path,'/WAND_data/subjects.txt'));
+% subjects = importdata(strcat('/media/nas_rete/Work_manuela/WAND_data/subjects.txt'));
 subjects(subjects==42565)=[];%subj that does not have mprage
 subjects(subjects==19230)=[];%subj that does not have b0
 subjects(subjects==20609)=[];%subj that does not have M0
@@ -96,28 +98,28 @@ for i = start_subj:n_subjs
 %     img_path_pve_2_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/pve_on_b0_250923/sub-',subj,'_run-01_PVE_2_on_b0.nii.gz');
 %     img_path_pve_2_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/pve_on_M0/sub-',subj,'_run-01_PVE_2_on_M0.nii.gz');
 
-% WAND in itab computer
-
-    img_path_pve_0_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
-    img_path_pve_0_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
-  
-    img_path_pve_1_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
-    img_path_pve_1_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
-
-    img_path_pve_2_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
-    img_path_pve_2_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
+% % WAND in itab computer
+% 
+%     img_path_pve_0_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
+%     img_path_pve_0_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
+% 
+%     img_path_pve_1_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
+%     img_path_pve_1_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
+% 
+%     img_path_pve_2_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
+%     img_path_pve_2_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
 
 
 % WAND data in Cubric computer
 
-%     img_path_pve_0_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
-%     img_path_pve_0_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
-% 
-%     img_path_pve_1_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
-%     img_path_pve_1_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
-%  
-%     img_path_pve_2_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
-%     img_path_pve_2_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
+    img_path_pve_0_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
+    img_path_pve_0_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
+
+    img_path_pve_1_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
+    img_path_pve_1_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
+
+    img_path_pve_2_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
+    img_path_pve_2_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
 
 
 %%%% SPM reads volumes and save them in a cell
@@ -202,13 +204,13 @@ for i = start_subj:n_subjs
 
 % WAND in itab computer  
 
-    img_path_atlas_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
-    img_path_atlas_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
+    % img_path_atlas_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
+    % img_path_atlas_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
 
 % WAND data in Cubric computer
 
-%   img_path_atlas_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
-%   img_path_atlas_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
+  img_path_atlas_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
+  img_path_atlas_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
 
 
 %%%% SPM reads volumes and save them in a cell 
@@ -258,17 +260,17 @@ for i = start_subj:n_subjs
 
 %%%%%%%write the files paths
 
-% WAND in itab storage
-    img_path_CMRO2=strcat('/media/nas_rete/Work_manuela/WAND_data/FUNC/CMRO2/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
-    img_path_rsoma=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
-    img_path_fsoma=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
-    img_path_fneurite=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
-    img_path_De=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
-    img_path_Din=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
-    img_path_fextra=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
-    if strcmp(mse_threshold,'yes')
-        img_path_mse=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
-    end
+% % WAND in itab storage
+%     img_path_CMRO2=strcat('/media/nas_rete/Work_manuela/WAND_data/FUNC/CMRO2/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
+%     img_path_rsoma=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
+%     img_path_fsoma=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
+%     img_path_fneurite=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
+%     img_path_De=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
+%     img_path_Din=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
+%     img_path_fextra=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
+%     if strcmp(mse_threshold,'yes')
+%         img_path_mse=strcat('/media/nas_rete/Work_manuela/WAND_data/SANDI_maps/sub-',subj,'/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
+%     end
 
 % Vitality   
 
@@ -299,18 +301,18 @@ for i = start_subj:n_subjs
  
 % WAND in cubric computer
 
-%     img_path_CMRO2=strcat('/home/c25078236/Desktop/WAND_data/FUNC/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
-%     % 
-%     img_path_rsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
-%     img_path_fsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
-%     img_path_fneurite=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
-%     img_path_De=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
-%     img_path_Din=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
-%     img_path_fextra=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
-%     %img_path_mse=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_mse.nii.gz');
-%     if strcmp(mse_threshold,'yes')
-%         img_path_mse=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
-%     end
+    img_path_CMRO2=strcat('/home/c25078236/Desktop/WAND_data/FUNC/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
+    % 
+    img_path_rsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
+    img_path_fsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
+    img_path_fneurite=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
+    img_path_De=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
+    img_path_Din=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
+    img_path_fextra=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
+    %img_path_mse=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_mse.nii.gz');
+    if strcmp(mse_threshold,'yes')
+        img_path_mse=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
+    end
 
 %%%% SPM reads volumes and save them in a cell 
 
@@ -547,8 +549,8 @@ title('Superficial Soma Density map')
 % % grid on
 
 %%  Count total number of regions
-img_path_atlas='/storage/shared/Atlas/AAL3v1_2mm_resampled.nii.gz';
-% img_path_atlas='/home/c25078236/Desktop/WAND_data/AAL3/AAL3v1_1mm.nii.gz';
+% img_path_atlas='/storage/shared/Atlas/AAL3v1_2mm_resampled.nii.gz';
+img_path_atlas='/home/c25078236/Desktop/WAND_data/AAL3/AAL3v1_1mm.nii.gz';
 Vhdr = spm_vol(img_path_atlas);
 V_atlas_tot = spm_read_vols(Vhdr);
 
@@ -564,6 +566,44 @@ V_atlas_glass = spm_read_vols(Vhdr);
 
 %% in case you don't have the original atlas
 % n_regions=166;%it is needed to built the empty matrix (you need to know the maximum length. If it's higher, it isn't a problem).
+
+%% create cortical regions mask
+cortical_regions = load(strcat(path,'/WAND_data/AAL_cortical_labels.txt'));
+
+V_atlases_cortical_dwi = {};
+
+for subj = 1 : length(subjects)
+    V_atlases_dwi_subj = V_atlases_dwi{subj};
+    V_atlas_cortical = V_atlases_dwi_subj;
+    for ii = 1:length(V_atlases_dwi_subj(:))
+        if any(cortical_regions==V_atlases_dwi_subj(ii))
+            V_atlas_cortical(ii)=1;
+        else
+            V_atlas_cortical(ii)=0;
+        end
+    end
+    V_atlases_cortical_dwi{end+1}=V_atlas_cortical;
+end
+
+V_atlases_cortical_func = {};
+
+for subj = 1 : length(subjects)
+    V_atlases_func_subj = V_atlases_func{subj};
+    V_atlas_cortical = V_atlases_func_subj;
+    for ii = 1:length(V_atlases_func_subj(:))
+        if any(cortical_regions==V_atlases_func_subj(ii))
+            V_atlas_cortical(ii)=1;
+        else
+            V_atlas_cortical(ii)=0;
+        end
+    end
+    V_atlases_cortical_func{end+1}=V_atlas_cortical;
+end
+
+% %check
+% V_atlases_cortical_dwi_1 = V_atlases_cortical_dwi{1};
+% figure,
+% imagesc(V_atlases_cortical_dwi_1(:,:,33))
 
 %% compute medians 
 %prepare empty matrices with maximum size 
@@ -639,6 +679,29 @@ means_pve_0_dwi_GM_subjs = []; %attention: if you want the same analysis also fo
 means_pve_1_dwi_GM_subjs = [];
 means_pve_2_dwi_GM_subjs = [];
 
+%considering only cortical regions of GM
+
+medians_CMRO2_GM_cortical_subjs = [];
+
+means_pve_0_func_GM_cortical_subjs = [];
+means_pve_1_func_GM_cortical_subjs = [];
+means_pve_2_func_GM_cortical_subjs = [];
+
+medians_rsoma_GM_cortical_dwi_subjs = [];
+medians_fsoma_GM_cortical_dwi_subjs = [];
+medians_fc_GM_cortical_dwi_subjs = [];
+medians_fsup_GM_cortical_dwi_subjs = [];
+
+medians_fneurite_GM_cortical_dwi_subjs = [];
+medians_De_GM_cortical_dwi_subjs = [];
+medians_Din_GM_cortical_dwi_subjs = [];
+medians_fextra_GM_cortical_dwi_subjs = [];
+
+means_pve_0_dwi_GM_cortical_subjs = [];
+means_pve_1_dwi_GM_cortical_subjs = [];
+means_pve_2_dwi_GM_cortical_subjs = [];
+
+%%check
 V_rsoma_GM_masked_subjs = zeros(n_subjs,SANDI_map_size);
 
 start_time=tic;
@@ -647,6 +710,9 @@ for subj = 1:n_subjs
     %load atlases
     V_atlas_func = V_atlases_func{subj}; 
     V_atlas_dwi = V_atlases_dwi{subj};
+
+    V_atlas_cortical_func = V_atlases_cortical_func{subj};
+    V_atlas_cortical_dwi = V_atlases_cortical_dwi{subj};
 
     %load pve maps
     V_pve_1_func = V_pves_1_func{subj};
@@ -926,6 +992,29 @@ for subj = 1:n_subjs
     means_pve_0_func_GM_subjs(end+1) = mean(V_pve_0_func_masked_GM(:));
     means_pve_1_func_GM_subjs(end+1) = mean(V_pve_1_func_masked_GM(:)); 
     means_pve_2_func_GM_subjs(end+1) = mean(V_pve_2_func_masked_GM(:));
+
+    % considering only cortical regions
+
+    V_mask_GM_cortical_func = V_GM.*V_atlas_cortical_func;
+    mask_func_GM_zeros_cortical = find(V_mask_GM_cortical_func==0);
+
+    V_CMRO2_masked_GM_cortical = V_CMRO2.*V_mask_GM_cortical_func;
+    V_pve_0_func_masked_GM_cortical = V_pve_0_func_original.*V_mask_GM_cortical_func;
+    V_pve_1_func_masked_GM_cortical = V_pve_1_func_original.*V_mask_GM_cortical_func;
+    V_pve_2_func_masked_GM_cortical = V_pve_2_func_original.*V_mask_GM_cortical_func;
+
+    %remove zeros of background
+    V_CMRO2_masked_GM_cortical(mask_func_GM_zeros_cortical)=[];
+    V_pve_0_func_masked_GM_cortical(mask_func_GM_zeros_cortical)=[]; 
+    V_pve_1_func_masked_GM_cortical(mask_func_GM_zeros_cortical)=[];
+    V_pve_2_func_masked_GM_cortical(mask_func_GM_zeros_cortical)=[];
+
+    medians_CMRO2_GM_cortical_subjs(end+1) = nanmedian(V_CMRO2_masked_GM_cortical(:));
+    means_pve_0_func_GM_cortical_subjs(end+1) = mean(V_pve_0_func_masked_GM_cortical(:));
+    means_pve_1_func_GM_cortical_subjs(end+1) = mean(V_pve_1_func_masked_GM_cortical(:)); 
+    means_pve_2_func_GM_cortical_subjs(end+1) = mean(V_pve_2_func_masked_GM_cortical(:));
+
+
 
     %%%%DWI space
     regions_dwi = unique(V_atlas_dwi(:));
@@ -1296,6 +1385,86 @@ for subj = 1:n_subjs
     means_pve_1_dwi_GM_subjs(end+1) = mean(V_pve_1_dwi_masked_GM(:));
     means_pve_2_dwi_GM_subjs(end+1) = mean(V_pve_2_dwi_masked_GM(:));
 
+    % considering only cortical regions
+
+    V_mask_GM_cortical_dwi = V_GM.*V_atlas_cortical_dwi;
+    mask_dwi_GM_cortical_zeros=find(V_mask_GM_cortical_dwi==0);
+
+    %mask
+
+    V_rsoma_GM_cortical_dwi_masked = V_rsoma.*V_mask_GM_cortical_dwi;
+    V_fsoma_GM_cortical_dwi_masked = V_fsoma.*V_mask_GM_cortical_dwi;
+    V_fc_GM_cortical_dwi_masked = V_fc.*V_mask_GM_cortical_dwi;
+    V_fsup_GM_cortical_dwi_masked = V_fsup.*V_mask_GM_cortical_dwi;
+
+    V_fneurite_GM_cortical_dwi_masked = V_fneurite.*V_mask_GM_cortical_dwi;  
+    V_De_GM_cortical_dwi_masked = V_De.*V_mask_GM_cortical_dwi;
+    V_Din_GM_cortical_dwi_masked = V_Din.*V_mask_GM_cortical_dwi;
+    V_fextra_GM_cortical_dwi_masked = V_fextra.*V_mask_GM_cortical_dwi;
+
+    V_pve_0_dwi_masked_GM_cortical = V_pve_0_dwi_original.*V_mask_GM_cortical_dwi;
+    V_pve_1_dwi_masked_GM_cortical = V_pve_1_dwi_original.*V_mask_GM_cortical_dwi;
+    V_pve_2_dwi_masked_GM_cortical = V_pve_2_dwi_original.*V_mask_GM_cortical_dwi;
+
+    %remove zeros of background
+
+    V_rsoma_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+    V_fsoma_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+    V_fc_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+    V_fsup_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+
+    V_fneurite_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+    V_De_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+    V_Din_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+    V_fextra_GM_cortical_dwi_masked(mask_dwi_GM_cortical_zeros)=[]; 
+
+    V_pve_0_dwi_masked_GM_cortical(mask_dwi_GM_cortical_zeros)=[]; 
+    V_pve_1_dwi_masked_GM_cortical(mask_dwi_GM_cortical_zeros)=[];
+    V_pve_2_dwi_masked_GM_cortical(mask_dwi_GM_cortical_zeros)=[];
+
+    %remove high MSE voxels
+    if strcmp(mse_threshold,'yes')
+
+        V_MSE_GM_cortical_masked = V_MSE.*V_mask_GM_cortical_dwi; %MSE
+
+        V_MSE_GM_cortical_masked(mask_dwi_GM_cortical_zeros)=[]; %MSE
+
+        %%%%%%%%find voxels which have MSE higher than Nth percentile
+        idx_high_MSE_GM_micropar=find(V_MSE_GM_cortical_masked>prctile(V_MSE_GM_cortical_masked,mse_threshold_value)); %MSE
+ 
+        %REMOVE THEM
+        V_rsoma_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+        V_fsoma_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+        V_fc_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+        V_fsup_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+
+        V_fneurite_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+        V_De_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+        V_Din_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+        V_fextra_GM_cortical_dwi_masked(idx_high_MSE_GM_micropar)=[]; %MSE
+
+        V_pve_0_dwi_masked_GM_cortical(idx_high_MSE_GM_micropar)=[];
+        V_pve_1_dwi_masked_GM_cortical(idx_high_MSE_GM_micropar)=[];
+        V_pve_2_dwi_masked_GM_cortical(idx_high_MSE_GM_micropar)=[];
+    end
+
+    %append
+
+    medians_rsoma_GM_cortical_dwi_subjs(end+1) = nanmedian(V_rsoma_GM_cortical_dwi_masked);
+    medians_fsoma_GM_cortical_dwi_subjs(end+1) = nanmedian(V_fsoma_GM_cortical_dwi_masked);
+    medians_fc_GM_cortical_dwi_subjs(end+1) = nanmedian(V_fc_GM_cortical_dwi_masked);
+    medians_fsup_GM_cortical_dwi_subjs(end+1) = nanmedian(V_fsup_GM_cortical_dwi_masked);
+
+    medians_fneurite_GM_cortical_dwi_subjs(end+1) = nanmedian(V_fneurite_GM_cortical_dwi_masked);
+    medians_De_GM_cortical_dwi_subjs(end+1) = nanmedian(V_De_GM_cortical_dwi_masked);
+    medians_Din_GM_cortical_dwi_subjs(end+1) = nanmedian(V_Din_GM_cortical_dwi_masked);
+    medians_fextra_GM_cortical_dwi_subjs(end+1) = nanmedian(V_fextra_GM_cortical_dwi_masked); 
+
+    means_pve_0_dwi_GM_cortical_subjs(end+1) = mean(V_pve_0_dwi_masked_GM_cortical(:));
+    means_pve_1_dwi_GM_cortical_subjs(end+1) = mean(V_pve_1_dwi_masked_GM_cortical(:)); 
+    means_pve_2_dwi_GM_cortical_subjs(end+1) = mean(V_pve_2_dwi_masked_GM_cortical(:));
+
+    %%check
     V_rsoma_GM_masked_subjs(subj,1:numel(V_rsoma_GM_masked)) = V_rsoma_GM_masked;
     
     toc
