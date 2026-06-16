@@ -15,11 +15,12 @@
 % load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
 
 %load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_NOTremovingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
-load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/260531/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_NOTremovingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
+% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/260531/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_NOTremovingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
 
+load('/home/c25078236/Desktop/saved_workspace/programmi/data/computed_with_wholeGMcorticalmedians.mat')
 %% select variables to examine
 energy_parameter = 'CMRO2';
-micro_parameter = 'Rsoma';
+micro_parameter = 'fc';
 
 %% remove uncommon labels between subjects and between spaces
 %% select matrices
@@ -562,15 +563,34 @@ labels_final=labels_func_subjs_final_spaces(1,:);
 
 %%
 
-if strcmp(micro_parameter,'Rsoma')
-    medians_dwi = medians_rsoma_subjs_final_spaces;
-elseif strcmp(micro_parameter,'fsoma')
-    medians_dwi = medians_fsoma_subjs_final_spaces;
-elseif strcmp(micro_parameter,'fsup')
-    medians_dwi = medians_fsup_subjs_final_spaces;
-elseif strcmp(micro_parameter,'fc')
-    medians_dwi = medians_fc_subjs_final_spaces;
-end
+% if strcmp(micro_parameter,'Rsoma')
+%     medians_dwi = medians_rsoma_subjs_final_spaces;
+% elseif strcmp(micro_parameter,'fsoma')
+%     medians_dwi = medians_fsoma_subjs_final_spaces;
+% elseif strcmp(micro_parameter,'fsup')
+%     medians_dwi = medians_fsup_subjs_final_spaces;
+% elseif strcmp(micro_parameter,'fc')
+%     medians_dwi = medians_fc_subjs_final_spaces;
+% end
+
+%%%%%%%%%%% variables to save
+
+% medians_func
+% 
+% means_pve_0_func
+% means_pve_1_func
+% means_pve_2_func
+% 
+% means_pve_0_dwi
+% means_pve_1_dwi
+% means_pve_2_dwi
+% 
+% labels_final
+
+% medians_rsoma_subjs_final_spaces
+% medians_fsoma_subjs_final_spaces
+% medians_fsup_subjs_final_spaces
+% medians_fc_subjs_final_spaces
 
 
 
@@ -579,11 +599,33 @@ end
 % medians_fsup_GM_subjs
 % medians_rsoma_GM_subjs
 % medians_fc_GM_subjs
+
 % means_pve_0_dwi_GM_subjs
 % means_pve_0_func_GM_subjs
 % means_pve_1_dwi_GM_subjs
 % means_pve_1_func_GM_subjs
 % means_pve_2_dwi_GM_subjs
 % means_pve_2_func_GM_subjs
+
 % V_atlas_glass  
 % n_voxels_dwi_final_spaces
+
+% medians_CMRO2_GM_cortical_subjs
+% 
+% means_pve_0_func_GM_cortical_subjs
+% means_pve_1_func_GM_cortical_subjs
+% means_pve_2_func_GM_cortical_subjs
+% 
+% medians_rsoma_GM_cortical_dwi_subjs
+% medians_fsoma_GM_cortical_dwi_subjs
+% medians_fc_GM_cortical_dwi_subjs
+% medians_fsup_GM_cortical_dwi_subjs
+% 
+% medians_fneurite_GM_cortical_dwi_subjs
+% medians_De_GM_cortical_dwi_subjs
+% medians_Din_GM_cortical_dwi_subjs
+% medians_fextra_GM_cortical_dwi_subjs
+% 
+% means_pve_0_dwi_GM_cortical_subjs
+% means_pve_1_dwi_GM_cortical_subjs
+% means_pve_2_dwi_GM_cortical_subjs
