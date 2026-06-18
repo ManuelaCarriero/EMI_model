@@ -13,11 +13,15 @@
 % load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_medians_CMRO2_GM_subjs.mat')
 
 % load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONSANDNDWIVOXELScomputed_medians_and_PVEmeans_withoutfsmasking_withnvoxels_NOTremovingzerosfromcmro2regions_andfromGM.mat')
-load('/home/c25078236/Desktop/saved_workspace/programmi/computed_data.mat')
+% load('/home/c25078236/Desktop/saved_workspace/programmi/computed_data.mat')
+
+root_path = '/media/nas_rete/Work_manuela'; %'/home/c25078236/Desktop';% /media/nas_rete/Work_manuela;
+load(strcat(root_path,'/EMI_model-main/EMI_data/WAND/260617/selected_medians.mat'))
+
 labels_final_original = labels_final;
 
 %% select parameters to be analyzed
-micro_parameter = 'Rsoma';
+micro_parameter = 'fc';
 energy_parameter = 'CMRO2';
 
 if strcmp(micro_parameter,'Rsoma')
@@ -184,9 +188,9 @@ if strcmp(micro_parameter,'Rsoma')
 elseif strcmp(micro_parameter,'fsoma')
     unit_of_measure_dwi='';
 elseif strcmp(micro_parameter,'fsup')
-    unit_of_measure_dwi='(m^{-1})';
+    unit_of_measure_dwi='(mm^{-1})';
 elseif strcmp(micro_parameter,'fc')
-    unit_of_measure_dwi='(m^{-3})';
+    unit_of_measure_dwi='(mm^{-3})';
 elseif strcmp(micro_parameter,'fneurite')
     unit_of_measure_dwi='';
 end
@@ -719,9 +723,9 @@ if strcmp(micro_parameter,'Rsoma')
 elseif strcmp(micro_parameter,'fsoma')
     text(0.35,100,txt,'FontWeight', 'Bold','FontSize',12);
 elseif strcmp(micro_parameter,'fsup')
-    text(10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
+    text(100,100,txt,'FontWeight', 'Bold','FontSize',12);
 elseif strcmp(micro_parameter,'fc')
-    text(10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+    text(10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
 end
 set(gcf,'position',[x0,y0,width,height]);
 ylim([40,200]);
@@ -740,102 +744,102 @@ grid on
 %you can't have error bars because you can't regress out for
 %each subject.
 
-%% plot based on cortical and subcortical
+%% plot based on cortical and subcortical (using PVE corrections coming from ALL regions)
 
-type = 'subcortical';
-
-if strcmp(type,'cortical')
-    label=1;
-elseif strcmp(type,'subcortical')
-    label=0;
-end
-
-cortical_regions = load('/home/c25078236/Desktop/WAND_data/AAL_cortical_labels.txt');
-cortical_regions_logical = ismember(labels_final,cortical_regions);
-
-x = medians_micro_parameter_vec(cortical_regions_logical==label);
-y = cmro2_regressed(cortical_regions_logical==label);
-
-% Fit a quadratic equation
-[pol,S] = polyfit(x, y, 1); %to plot the linear model I use this function
-% Evaluate the fitted polynomial
-y_fit = polyval(pol, x);
-% Calculate the R-squared value
-Rsquared = 1 - sum((y - y_fit).^2) / sum((y - nanmean(y)).^2);
-% Rsquared
-
-alpha = 0.05; % Significance level
-[y_fit,delta] = polyconf(pol,x,S,'alpha',alpha);
-
-[x_sorted,index] = sortrows(x');
-y_fit=y_fit';
-delta = delta';
-y_fit_sorted = y_fit(index);
-delta_sorted = delta(index);
-
-
-[r,p] = corrcoef(medians_micro_parameter_vec(cortical_regions_logical==label),cmro2_regressed(cortical_regions_logical==label));
-corr_coef_str = num2str(round(r(2),2));
-
-figure, 
-%s=plot(medians_micro_parameter_vec,cmro2_regressed,'.',MarkerSize=25);
-s = errorbar(medians_micro_parameter_vec(cortical_regions_logical==label), cmro2_regressed(cortical_regions_logical==label), SE_energy(cortical_regions_logical==label), SE_energy(cortical_regions_logical==label), SE_micro_parameter(cortical_regions_logical==label), SE_micro_parameter(cortical_regions_logical==label),'.','MarkerSize',22);
-
-
-%plot confidence interval shadow
-x_patch = x_sorted;
-y_patch_lower = y_fit_sorted-delta_sorted;
-y_patch_higher = y_fit_sorted+delta_sorted;
-
-x_all = [x_patch; flipud(x_patch)];
-y_all = [y_patch_higher; flipud(y_patch_lower)];
-
-patch(x_all,y_all,'cyan','FaceAlpha',0.1,'EdgeColor','none')
-
-hold on
-plot(x_sorted,y_fit_sorted,'--','LineWidth',3,'Color',"#000000");
-hold on
-plot(x_sorted,y_fit_sorted-delta_sorted,'--',x_sorted,y_fit_sorted+delta_sorted,'--','LineWidth',1.5,'Color',[0.5 0.5 0.5])
-
-xlabel(strcat(micro_parameter,unit_of_measure_dwi),'FontSize',15,'FontWeight','bold');
-ylabel(strcat('Adjusted CMRO_2',unit_of_measure_energy),'FontSize',12,'FontWeight','bold');
-title(strcat('CMRO_2 vs',micro_parameter),'FontSize',22)
-if strcmp(type,'cortical')
-    s.Color='r';
-elseif strcmp(type,'subcortical')
-    s.Color='b';
-end
-t.Color='b';
-set(get(gca, 'XAxis'), 'FontWeight', 'bold');
-set(get(gca, 'YAxis'), 'FontWeight', 'bold');
-set(gca,'box','off')
-x0=50;
-y0=50;
-width=550;
-height=450;
-if p(2)<0.05 && p(2)>0.01    
-    txt = {strcat('Pearson r= ',corr_coef_str,'*')};
-elseif p(2)<0.01 && p(2)>0.001   
-    txt = {strcat('Pearson r= ',corr_coef_str,'**')};
-elseif p(2)<0.001
-    txt = {strcat('Pearson r= ',corr_coef_str,'***')};
-elseif p(2)>0.05
-        txt = {strcat('Pearson r= ',corr_coef_str,'')};
-end
-if strcmp(micro_parameter,'Rsoma')
-    text(9,100,txt,'FontWeight', 'Bold','FontSize',12);
-elseif strcmp(micro_parameter,'fsoma')
-    text(0.35,100,txt,'FontWeight', 'Bold','FontSize',12);
-elseif strcmp(micro_parameter,'fsup')
-    text(10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
-elseif strcmp(micro_parameter,'fc')
-    text(10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
-end
-set(gcf,'position',[x0,y0,width,height]);
-ylim([40,200]);
-grid on
-
-disp('stop')
+% type = 'subcortical';
+% 
+% if strcmp(type,'cortical')
+%     label=1;
+% elseif strcmp(type,'subcortical')
+%     label=0;
+% end
+% 
+% cortical_regions = load(strcat(root_path,'/WAND_data/AAL_cortical_labels.txt'));
+% cortical_regions_logical = ismember(labels_final,cortical_regions);
+% 
+% x = medians_micro_parameter_vec(cortical_regions_logical==label);
+% y = cmro2_regressed(cortical_regions_logical==label);
+% 
+% % Fit a quadratic equation
+% [pol,S] = polyfit(x, y, 1); %to plot the linear model I use this function
+% % Evaluate the fitted polynomial
+% y_fit = polyval(pol, x);
+% % Calculate the R-squared value
+% Rsquared = 1 - sum((y - y_fit).^2) / sum((y - nanmean(y)).^2);
+% % Rsquared
+% 
+% alpha = 0.05; % Significance level
+% [y_fit,delta] = polyconf(pol,x,S,'alpha',alpha);
+% 
+% [x_sorted,index] = sortrows(x');
+% y_fit=y_fit';
+% delta = delta';
+% y_fit_sorted = y_fit(index);
+% delta_sorted = delta(index);
+% 
+% 
+% [r,p] = corrcoef(medians_micro_parameter_vec(cortical_regions_logical==label),cmro2_regressed(cortical_regions_logical==label));
+% corr_coef_str = num2str(round(r(2),2));
+% 
+% figure, 
+% %s=plot(medians_micro_parameter_vec,cmro2_regressed,'.',MarkerSize=25);
+% s = errorbar(medians_micro_parameter_vec(cortical_regions_logical==label), cmro2_regressed(cortical_regions_logical==label), SE_energy(cortical_regions_logical==label), SE_energy(cortical_regions_logical==label), SE_micro_parameter(cortical_regions_logical==label), SE_micro_parameter(cortical_regions_logical==label),'.','MarkerSize',22);
+% 
+% 
+% %plot confidence interval shadow
+% x_patch = x_sorted;
+% y_patch_lower = y_fit_sorted-delta_sorted;
+% y_patch_higher = y_fit_sorted+delta_sorted;
+% 
+% x_all = [x_patch; flipud(x_patch)];
+% y_all = [y_patch_higher; flipud(y_patch_lower)];
+% 
+% patch(x_all,y_all,'cyan','FaceAlpha',0.1,'EdgeColor','none')
+% 
+% hold on
+% plot(x_sorted,y_fit_sorted,'--','LineWidth',3,'Color',"#000000");
+% hold on
+% plot(x_sorted,y_fit_sorted-delta_sorted,'--',x_sorted,y_fit_sorted+delta_sorted,'--','LineWidth',1.5,'Color',[0.5 0.5 0.5])
+% 
+% xlabel(strcat(micro_parameter,unit_of_measure_dwi),'FontSize',15,'FontWeight','bold');
+% ylabel(strcat('Adjusted CMRO_2',unit_of_measure_energy),'FontSize',12,'FontWeight','bold');
+% title(strcat('CMRO_2 vs',micro_parameter),'FontSize',22)
+% if strcmp(type,'cortical')
+%     s.Color='r';
+% elseif strcmp(type,'subcortical')
+%     s.Color='b';
+% end
+% t.Color='b';
+% set(get(gca, 'XAxis'), 'FontWeight', 'bold');
+% set(get(gca, 'YAxis'), 'FontWeight', 'bold');
+% set(gca,'box','off')
+% x0=50;
+% y0=50;
+% width=550;
+% height=450;
+% if p(2)<0.05 && p(2)>0.01    
+%     txt = {strcat('Pearson r= ',corr_coef_str,'*')};
+% elseif p(2)<0.01 && p(2)>0.001   
+%     txt = {strcat('Pearson r= ',corr_coef_str,'**')};
+% elseif p(2)<0.001
+%     txt = {strcat('Pearson r= ',corr_coef_str,'***')};
+% elseif p(2)>0.05
+%         txt = {strcat('Pearson r= ',corr_coef_str,'')};
+% end
+% if strcmp(micro_parameter,'Rsoma')
+%     text(9,100,txt,'FontWeight', 'Bold','FontSize',12);
+% elseif strcmp(micro_parameter,'fsoma')
+%     text(0.35,100,txt,'FontWeight', 'Bold','FontSize',12);
+% elseif strcmp(micro_parameter,'fsup')
+%     text(10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
+% elseif strcmp(micro_parameter,'fc')
+%     text(10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+% end
+% set(gcf,'position',[x0,y0,width,height]);
+% ylim([40,200]);
+% grid on
+% 
+% disp('stop')
  %% TEST YOUR MODEL
 % 
 % %% analysis using all regions for all subjects
@@ -1123,7 +1127,7 @@ corr_for_each_subjs_regout_pves=[];
 
 % choose to plot either the distribution or the scatterplots
 
-figure,
+% figure,
 for i = 1:n_subjs
     medians_dwi_subj=medians_dwi(i,:);
     medians_func_subj=medians_func(i,:);
@@ -1143,12 +1147,12 @@ for i = 1:n_subjs
     means_pve_0_subj(idx_tot)=[];
     means_pve_2_subj(idx_tot)=[];
 
-
-    h=hist(medians_dwi_subj)
-    xlabel(micro_parameter,'FontWeight','bold')
-    ylabel('Counts (# of regions)','FontWeight','bold')
-    hold on
-    grid on
+    %%%%to compute the distributions of values
+%     h=hist(medians_dwi_subj)
+%     xlabel(micro_parameter,'FontWeight','bold')
+%     ylabel('Counts (# of regions)','FontWeight','bold')
+%     hold on
+%     grid on
 
     %%%%%%%
     samples_mat=cat(1,medians_dwi_subj,medians_func_subj,means_pve_0_subj,means_pve_2_subj);
@@ -1952,9 +1956,9 @@ if strcmp(micro_parameter,'Rsoma')
 elseif strcmp(micro_parameter,'fsoma')
     text(0.45,100,txt,'FontWeight', 'Bold','FontSize',12);
 elseif strcmp(micro_parameter,'fsup')
-    text(1.5*10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
+    text(1.5*100,100,txt,'FontWeight', 'Bold','FontSize',12);
 elseif strcmp(micro_parameter,'fc')
-    text(1.5*10^14,100,txt,'FontWeight', 'Bold','FontSize',12);
+    text(1.5*10^5,100,txt,'FontWeight', 'Bold','FontSize',12);
 end
 set(gcf,'position',[x0,y0,width,height]);
 ylim([40,200]);
