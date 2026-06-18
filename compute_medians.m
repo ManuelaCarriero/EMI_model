@@ -5,7 +5,8 @@ rois = 'not complete'; %without any kind of masking, otherwise choose 'complete'
 masking = 'GM'; %masking only by GM, otherwise choose 'all' and it will mask using both WM and CSF
 mse_threshold = 'yes';%no
 mse_threshold_value=85;
-path = '/home/c25078236/Desktop';% /media/nas_rete/Work_manuela
+
+root_path = '/media/nas_rete/Work_manuela'; %'/home/c25078236/Desktop';% /media/nas_rete/Work_manuela;
 %for the moment you have to change the paths to the data
 
 %pve_1 = GM,
@@ -43,7 +44,7 @@ rsoma_upper_limit=7; %7 micrometer is good for WAND data.%11.1 for Chieti
 
 %% WAND data
 
-subjects = importdata(strcat(path,'/WAND_data/subjects.txt'));
+subjects = importdata(strcat(root_path,'/WAND_data/subjects.txt'));
 % subjects = importdata(strcat('/media/nas_rete/Work_manuela/WAND_data/subjects.txt'));
 subjects(subjects==42565)=[];%subj that does not have mprage
 subjects(subjects==19230)=[];%subj that does not have b0
@@ -98,29 +99,18 @@ for i = start_subj:n_subjs
 %     img_path_pve_2_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/pve_on_b0_250923/sub-',subj,'_run-01_PVE_2_on_b0.nii.gz');
 %     img_path_pve_2_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/pve_on_M0/sub-',subj,'_run-01_PVE_2_on_M0.nii.gz');
 
-% % WAND in itab computer
-% 
-%     img_path_pve_0_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
-%     img_path_pve_0_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
-% 
-%     img_path_pve_1_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
-%     img_path_pve_1_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
-% 
-%     img_path_pve_2_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
-%     img_path_pve_2_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
+%%%%%%%%%%%%%%
 
+% WAND data
 
-% WAND data in Cubric computer
+    img_path_pve_0_dwi=strcat(root_path,'/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
+    img_path_pve_0_func=strcat(root_path,'/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
 
-    img_path_pve_0_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve0_on_b0.nii.gz');
-    img_path_pve_0_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve0_on_M0.nii.gz');
+    img_path_pve_1_dwi=strcat(root_path,'/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
+    img_path_pve_1_func=strcat(root_path,'/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
 
-    img_path_pve_1_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve1_on_b0.nii.gz');
-    img_path_pve_1_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve1_on_M0.nii.gz');
-
-    img_path_pve_2_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
-    img_path_pve_2_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
-
+    img_path_pve_2_dwi=strcat(root_path,'/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_b0/sub-',subj,'_pve2_on_b0.nii.gz');
+    img_path_pve_2_func=strcat(root_path,'/WAND_data/ANAT/pve_coregistered/pve_coregistered/pve_on_M0/sub-',subj,'_pve2_on_M0.nii.gz');
 
 %%%% SPM reads volumes and save them in a cell
 
@@ -202,15 +192,10 @@ for i = start_subj:n_subjs
 %     img_path_atlas_dwi=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/dwi/atlas_on_b0/AAL3v1_2mm_on_sub-',subj,'_run-01_acq-dwi_B0_brain_corr.nii.gz');
 %     img_path_atlas_func=strcat('/media/nas_rete/Vitality/maps2SUBJSPACE/func/atlas_on_M0/AAL3v1_2mm_on_sub-',subj,'_task-bh_run-01_acq-dexi_M0.nii.gz');
 
-% WAND in itab computer  
+% WAND data
 
-    % img_path_atlas_dwi=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
-    % img_path_atlas_func=strcat('/media/nas_rete/Work_manuela/WAND_data/ANAT/atlas_coregistered/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
-
-% WAND data in Cubric computer
-
-  img_path_atlas_dwi=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
-  img_path_atlas_func=strcat('/home/c25078236/Desktop/WAND_data/ANAT/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
+  img_path_atlas_dwi=strcat(root_path,'/WAND_data/ANAT/atlas_coregistered/atlas_on_b0/sub-',subj,'_AAL3v1_1mm_on_b0.nii.gz');
+  img_path_atlas_func=strcat(root_path,'/WAND_data/ANAT/atlas_coregistered/atlas_on_M0/sub-',subj,'_AAL3v1_1mm_on_M0.nii.gz');
 
 
 %%%% SPM reads volumes and save them in a cell 
@@ -301,17 +286,17 @@ for i = start_subj:n_subjs
  
 % WAND in cubric computer
 
-    img_path_CMRO2=strcat('/home/c25078236/Desktop/WAND_data/FUNC/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
+    img_path_CMRO2=strcat(root_path,'/WAND_data/FUNC/CMRO2/sub-',subj,'_cmro2_est.nii.gz');
     % 
-    img_path_rsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
-    img_path_fsoma=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
-    img_path_fneurite=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
-    img_path_De=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
-    img_path_Din=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
-    img_path_fextra=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
+    img_path_rsoma=strcat(root_path,'/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Rsoma.nii.gz');
+    img_path_fsoma=strcat(root_path,'/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fsoma.nii.gz');
+    img_path_fneurite=strcat(root_path,'/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fneurite.nii.gz');
+    img_path_De=strcat(root_path,'/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_De.nii.gz');
+    img_path_Din=strcat(root_path,'/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_Din.nii.gz');
+    img_path_fextra=strcat(root_path,'/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/SANDI-fit_fextra.nii.gz');
     %img_path_mse=strcat('/media/nas_rete/Work_manuela/Vitality_data_SANDInewrelease/',subj,'/SANDI_output/',subj,'_',run,'_SANDI-fit_mse.nii.gz');
     if strcmp(mse_threshold,'yes')
-        img_path_mse=strcat('/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
+        img_path_mse=strcat(root_path,'/WAND_data/DWI/SANDI_MAPS/sub-',subj,'/SANDI_Output/sub-',subj,'_SANDI-fit_mse.nii.gz');
     end
 
 %%%% SPM reads volumes and save them in a cell 
@@ -426,8 +411,8 @@ for i = 1:n_subjs
         V_rsoma_masked = V_rsoma.*V_fsoma_to_mask.*V_GM; 
     end 
 
-    %convert to m^3
-    V_rsoma_masked = V_rsoma_masked.*10^-6;
+    %convert to mm^3
+    V_rsoma_masked = V_rsoma_masked.*10^-6.*10^3;
     
     %voxel wise divide fs map over 4/3pir^3
     fc_map = V_fsoma./((4/3)*pi*V_rsoma_masked.^3);
@@ -522,8 +507,8 @@ for i = 1:n_subjs
         V_rsoma_masked = V_rsoma.*V_fsoma_to_mask.*V_GM; 
     end
 
-    %convert to m^3
-    V_rsoma_masked = V_rsoma_masked.*10^-6;    
+    %convert to mm^3
+    V_rsoma_masked = V_rsoma_masked.*10^-6.*10^3;    
 
     %voxel wise divide fs map over 4/3pir^3
     fsup_map = V_fsoma./V_rsoma_masked;
@@ -550,7 +535,7 @@ title('Superficial Soma Density map')
 
 %%  Count total number of regions
 % img_path_atlas='/storage/shared/Atlas/AAL3v1_2mm_resampled.nii.gz';
-img_path_atlas='/home/c25078236/Desktop/WAND_data/AAL3/AAL3v1_1mm.nii.gz';
+img_path_atlas=strcat(root_path,'/WAND_data/AAL3/AAL3v1_1mm.nii.gz');
 Vhdr = spm_vol(img_path_atlas);
 V_atlas_tot = spm_read_vols(Vhdr);
 
@@ -568,7 +553,7 @@ V_atlas_glass = spm_read_vols(Vhdr);
 % n_regions=166;%it is needed to built the empty matrix (you need to know the maximum length. If it's higher, it isn't a problem).
 
 %% create cortical regions mask
-cortical_regions = load(strcat(path,'/WAND_data/AAL_cortical_labels.txt'));
+cortical_regions = load(strcat(root_path,'/WAND_data/AAL_cortical_labels.txt'));
 
 V_atlases_cortical_dwi = {};
 
