@@ -72,7 +72,7 @@ means_pve_1_func=means_pve_1_func(:,cortical_regions_logical==label);
 means_pve_2_func=means_pve_2_func(:,cortical_regions_logical==label);
 
 
-
+labels_final = labels_final(cortical_regions_logical==label);
 
 
 
@@ -199,6 +199,16 @@ labels_final(idx)=[];
 
 disp('medians across subjects equal to NaN removed')
 
+
+%%%% test if only cortical regions remain
+
+test_labels = setdiff(labels_final,cortical_regions);
+
+if isempty(test_labels)
+    disp("Test passed: only cortical regions have been considered")
+else
+    disp("Test failed: you are not considering only cortical regions")
+end
 
 
 %% GLM considering PVE_WM and PVE_CSF as covariates
@@ -341,12 +351,13 @@ set(gca,'box','off')
 
 xlabel(strcat(micro_parameter_name,unit_of_measure_dwi),'FontSize',19,'FontWeight','bold','FontName','Calibri');
 ylabel(strcat('CMRO_2',unit_of_measure_energy),'FontSize',19,'FontWeight','bold','FontName','Calibri');
-title(strcat('CMRO_2 vs',micro_parameter_name),'FontSize',19,'FontWeight','bold','FontName','Calibri')
+title(strcat('CMRO_2 vs ',micro_parameter_name),'FontSize',19,'FontWeight','bold','FontName','Calibri')
+% title(strcat('CMRO_2 vs R_{soma}'),'FontSize',19,'FontWeight','bold','FontName','Calibri')
 s.Color='b';
 
 x0=50;
 y0=50;
-width=500;%550;
+width=650;%550;
 height=500;%450;
  
 if p(2)<0.05 && p(2)>0.01    
@@ -359,7 +370,7 @@ elseif p(2)>0.05
         txt = {strcat('r = ',corr_coef_str,'')};
 end
 if strcmp(micro_parameter,'Rsoma')
-    text(9,100,txt,'FontWeight', 'Bold','FontSize',18);
+    text(8.7,55,txt,'FontWeight', 'Bold','FontSize',18);
 elseif strcmp(micro_parameter,'fsoma')
     text(0.35,100,txt,'FontWeight', 'Bold','FontSize',18);
 elseif strcmp(micro_parameter,'fsup')
@@ -372,6 +383,7 @@ set(gcf,'position',[x0,y0,width,height]);
 ylim([40,200]);
 grid on
 
+% print('CMRO2_vs_Rsoma_scatterplot', '-dsvg', '-r1000');
 
 % % x = [1 0 1 0];
 % % y = [0 0 1 1];
@@ -515,8 +527,8 @@ s.FaceColor="b";
 set(get(gca, 'XAxis'), 'FontWeight', 'bold','FontSize',14);
 set(get(gca, 'YAxis'), 'FontWeight', 'bold','FontSize',14);
 set(gca,'box','off')
-width=450;%550;
-height=400;%450;
+width=600;%550;
+height=450;%450;
 
 xlabel(strcat('regression coefficient estimate,',micro_parameter_reg_coeff),'FontSize',16,'FontWeight','bold','FontName','Calibri');
 ylabel('Counts (# subjects)','FontSize',19,'FontWeight','bold','FontName','Calibri');
@@ -541,50 +553,522 @@ set(gcf,'position',[x0,y0,width,height]);
 % text(-0.5,7,txt, 'FontWeight', 'bold','FontSize',15);
 grid on
 
-disp('Regression coefficients distribution (ttest)')
+disp(strcat('Regression coefficients distribution (ttest) for',micro_parameter_name))
 [h,p]=ttest(estimate_microparameter_subjs)%1 rejects the null hypothesis that the mean is equal to 0.
-
 median_estimate = median(estimate_microparameter_subjs)
-mean_estimate = mean(estimate_microparameter_subjs)
-std_estimate = std(estimate_microparameter_subjs)
+interquartile_range = iqr(estimate_microparameter_subjs)
 
-% % save variable for the diff analysis
-% if strcmp(micro_parameter,'Rsoma')   
-%     estimate_microparameter_subjs_rsoma=estimate_microparameter_subjs;
-% elseif strcmp(micro_parameter,'fsoma')
-%     estimate_microparameter_subjs_fsoma=estimate_microparameter_subjs;
-% elseif strcmp(micro_parameter,'fsup')
-%     estimate_microparameter_subjs_fsup=estimate_microparameter_subjs;
-% elseif strcmp(micro_parameter,'fc')
-%     estimate_microparameter_subjs_fc=estimate_microparameter_subjs;
-% end
+%% across subjs for each region
+% check correlation distribution 
 
-% median_pvalue = median(pvalue_microparameter_subjs);
-% std_pvalue = std(pvalue_microparameter_subjs);
+disp('correlation across subjects for each region')
+
+n_regions_final = numel(labels_final);
+
+z=[];
+pvalue=[];
+z_regout_pves=[];
+pvalue_regout_pves=[];
+std_dev_func=[];
+std_dev_dwi=[];
+% labels_final_mdlaccepted = [];
+
+
+for i = 1:n_regions_final
+    [r,p] = corrcoef(medians_func(:,i), medians_dwi(:,i),'rows','complete');
+    z(end+1)=r(2);
+    pvalue(end+1)=p(2);
+    std_dev_func(end+1)=std(medians_func(:,i));
+    std_dev_dwi(end+1)=std(medians_dwi(:,i));
+
+    % calculate corr regressing out variables
+    medians_dwi_region = medians_dwi(:,i);
+    means_pve_0_dwi_region = means_pve_0_dwi(:,i);
+    means_pve_2_dwi_region = means_pve_2_dwi(:,i);
+    medians_func_region = medians_func(:,i);
+    
+    %%%%%
+    %find idx of nans
+    idx_dwi = find(isnan(medians_dwi_region));
+    if isempty(idx_dwi)
+        idx_dwi=[];
+    end
+    idx_pve_0 = find(isnan(means_pve_0_dwi_region));
+    if isempty(idx_pve_0)
+        idx_pve_0=[];
+    end
+    idx_pve_2 = find(isnan(means_pve_2_dwi_region));
+    if isempty(idx_pve_2)
+        idx_pve_2=[];
+    end
+    idx_func = find(isnan(medians_func_region));
+    if isempty(idx_func)
+        idx_func=[];
+    end
+
+    idx_tot = unique(cat(1,idx_dwi,idx_pve_0,idx_pve_2,idx_func));
+
+    %remove nans
+    medians_dwi_region(idx_tot)=[];
+    means_pve_0_dwi_region(idx_tot)=[];
+    means_pve_2_dwi_region(idx_tot)=[];
+    medians_func_region(idx_tot)=[];
+    %%%%%
+
+    %zscore
+    medians_dwi_scored = nanzscore(medians_dwi_region);
+    means_pve_0_dwi_scored = nanzscore(means_pve_0_dwi_region);
+    means_pve_2_dwi_scored = nanzscore(means_pve_2_dwi_region);
+    medians_energy_scored = nanzscore(medians_func_region);
+    
+    medians_dwi_scored_tr = medians_dwi_scored';
+    means_pve_0_dwi_scored_tr = means_pve_0_dwi_scored';
+    means_pve_2_dwi_scored_tr = means_pve_2_dwi_scored';
+    medians_energy_scored_tr = medians_energy_scored';
+
+    %GLM
+
+    tbl=table(medians_energy_scored_tr',medians_dwi_scored_tr',means_pve_0_dwi_scored_tr',means_pve_2_dwi_scored_tr', 'VariableNames', ...
+        {'CMRO2','microparameter','pve_0_dwi','pve_2_dwi'});
+
+    %build your model
+
+    if isempty(tbl)
+        disp('do nothing')
+    else
+        mdl=fitlm(tbl,'CMRO2 ~ microparameter + pve_0_dwi + pve_2_dwi','RobustOpts','off');
+        coeffs_mat=table2array(mdl.Coefficients);
+
+
+
+        if anynan(coeffs_mat)
+            disp('do nothing')
+        else
+            disp('append correlation coefficient')
+            %reg out
+            pve_0_estimate = coeffs_mat(3,1);
+            pve_2_estimate = coeffs_mat(4,1);
+            cmro2_without_pves = medians_energy_scored_tr - means_pve_0_dwi_scored_tr.*pve_0_estimate - means_pve_2_dwi_scored_tr.*pve_2_estimate;
+
+            %calculate corr
+
+            [r_regout,p_regout] = corrcoef(cmro2_without_pves, medians_dwi_scored_tr,'rows','complete');
+            z_regout_pves(end+1)=r_regout(2);
+            pvalue_regout_pves(end+1)=p_regout(2);
+%             labels_final_mdlaccepted(end+1)=labels_final(i);
+
+            % if isnan(r_regout(2))
+            %     break
+            % end
+            % if r_regout(2) < -0.9
+            %      break
+            % end
+            % if anynan(coeffs_mat)
+            %      break
+            % end
+        end
+    end
+
+end
+
+%% fdr correction 
+%in case you remove pve effect
+pvalue = pvalue_regout_pves;
+z = z_regout_pves;
+
+%%
+BHFDR_correction = 'yes';
+
+%%
+[pFDR] = mafdr(pvalue,'BHFDR','True');
+
+significant_pFDR=[];
+idx_significant_pFDR=[];
+%select regions based on qvalues
+for i = 1:length(pvalue)
+    if pFDR(i) < 0.05
+        significant_pFDR(end+1)=pFDR(i);
+        idx_significant_pFDR(end+1)=i;
+    end
+end
+
+ratio_survived=length(significant_pFDR)/length(pvalue);
+disp(strcat(num2str(round(ratio_survived*100,1)),'%'))
+
+figure, scatter(pvalue,pFDR,'o')
+xlabel('p values','FontWeight','Bold')
+ylabel('q values','FontWeight','Bold')
+grid on
+
+%%
+if strcmp(BHFDR_correction,'yes')
+    z_accepted = z(idx_significant_pFDR);
+    labels_final_accepted = labels_final(idx_significant_pFDR);
+else
+    z_accepted=z_regout_pves;
+    labels_final_accepted=labels_final;
+end
+
+ %% check if the correlation is due to high variability
+% %(high std cmro2 distributions may correspond to high
+% %std microstructural parameter distribution)
 % 
-% mean_with_subjs_corr=nanmean(corr_for_each_subjs_regout_pves);%with fsup we could have NaNs
-% [h,p,ci,stats]=ttest(atanh(corr_for_each_subjs_regout_pves));
+% std_dev_func_labels = std_dev_func(idx_significant_pFDR);
+% std_dev_dwi_labels = std_dev_dwi(idx_significant_pFDR);
 % 
-% mean_corr = num2str(round(mean_with_subjs_corr,2));
-
-% correlation distribution
-
 % figure, 
-% s=histogram(corr_for_each_subjs_regout_pves,'FaceAlpha',1,'BinWidth',0.07);
-% s.FaceColor="b";
-% xlabel('correlation coefficient, r','FontWeight','bold','FontSize',15);
-% ylabel('Counts (# subjects)','FontWeight','bold','FontSize',15);
-% ylim([0,8]);
-% xline(0,'--','LineWidth',3);
-% if p<0.05 && p>0.01    
-%     txt = {strcat('\mu_r = ',mean_corr,'*')};
-% elseif p<0.01 && p>0.001   
-%     txt = {strcat('\mu_r = ',mean_corr,'**')};
-% elseif p<0.001
-%     txt = {strcat('\mu_r = ',mean_corr,'***')};
-% elseif p>0.05
-%         txt = {strcat('\mu_r = ',mean_corr,'')};
-% end
-% title(strcat(energy_parameter, 'vs',micro_parameter));
-% text(0.1,7,txt, 'FontWeight', 'bold','FontSize',15);
+% hist(std_dev_func)
+% xlabel('standard deviation across subjects')
+% ylabel('counts (# of regions)')
+% title('CMRO_2')
+% hold on
+% s=scatter(std_dev_func_labels,zeros(1,length(idx_significant_pFDR)));
+% s.MarkerEdgeColor = 'r';
+% s.MarkerFaceColor = 'r';
+% ylim([0,40]);
 % grid on
+% 
+% figure, 
+% hist(std_dev_dwi)
+% xlabel('standard deviation across subjects')
+% ylabel('counts (# of regions)')
+% title('fsup')
+% hold on
+% s=scatter(std_dev_dwi_labels,zeros(1,length(idx_significant_pFDR)));
+% s.MarkerEdgeColor = 'r';
+% s.MarkerFaceColor = 'r';
+% grid on
+
+
+
+
+
+%% distribution of z accepted
+
+mean_regions_corr=nanmean(z_accepted);
+[h,p,ci,stats]=ttest(atanh(z_accepted));
+
+mean_corr=round(mean_regions_corr,2);
+mean_corr=num2str(mean_corr);
+
+figure, hist(z_accepted);
+xlabel('correlation coefficient, r','FontWeight','bold','FontSize',15);
+ylabel('# regions','FontWeight','bold','FontSize',15);
+ylim([0,8]);
+if p<0.05 && p>0.01    
+    txt = {strcat('\mu_r = ',mean_corr,'*')};
+elseif p<0.01 && p>0.001   
+    txt = {strcat('\mu_r = ',mean_corr,'**')};
+elseif p<0.001
+    txt = {strcat('\mu_r = ',mean_corr,'***')};
+elseif p>0.05
+        txt = {strcat('\mu_r = ',mean_corr,'')};
+end
+text(0.57,3,txt, 'FontWeight', 'bold','FontSize',15);
+grid on 
+
+
+%% create matrix to create map
+corr_and_regions = [z_accepted;labels_final_accepted].';
+
+% %% check which are regions with negative correlation coefficients
+% z_accepted_neg=[];
+% 
+% for i = 1:length(z_accepted)
+%     if z_accepted(i)<0
+%         z_accepted_neg(end+1)=labels_final_accepted(i);
+%     end
+% end
+% 
+% %% run this section if you want to check where pos and neg corr regions are
+% binary_z=[];
+% for i=1:length(z_accepted)
+%     if z_accepted(i)>0
+%         binary_z(i)=1;
+%     else
+%         binary_z(i)=-1;
+%     end
+% end
+% corr_and_regions = [binary_z;labels_accepted].';
+
+%%
+diff=setxor(labels_final_accepted,unique(V_atlas_glass));
+%regions which did not survive will be set equal to zero
+
+%
+V_atlas = V_atlas_glass;
+for ii = 1:length(V_atlas_glass(:))%lo fa per tutti i valori dell'immagine
+    if any(0==V_atlas_glass(ii))
+        V_atlas(ii)=0;
+    elseif any(diff==V_atlas_glass(ii))
+        V_atlas(ii)=0;
+    else
+        idx=find(corr_and_regions(:,2)==V_atlas_glass(ii));
+        %substitute the corresponding corr coefficient
+        corr=corr_and_regions(:,1);
+        V_atlas(ii)=corr(idx);
+    end
+end
+
+rgb = [ ...
+    94    79   162
+    50   136   189
+   102   194   165
+   171   221   164
+   230   245   152
+    %255    255   255   
+   255   255   191
+   254   224   139
+   253   174    97
+   244   109    67
+   213    62    79
+   158     1    0  ] / 255;%66
+
+b = repmat(linspace(0,1,200),20,1);
+
+
+%plot only regions with significant p-values
+fig=figure;
+a=28:4:68;%12:4:72;
+for i = 1:length(a)
+    subplot(4,4,i)
+    imagesc(rot90(V_atlas(:,:,a(i))))%[0,8]
+    axis equal
+    axis off
+    caxis([-1,+1])
+end
+h=axes(fig,'visible','off');
+imshow(b,[],'InitialMagnification','fit')
+colormap(rgb)
+%colormap seismic
+colorbar(h,'orientation','horizontal','Location','SouthOutside','FontSize',12);
+sgtitle('Regional correlation map thresholded for p<0.05')
+caxis([-1,+1])
+
+%% check for symmetry between positive and negative correlation.
+% colormap(rgb)
+% 
+% hf = figure('Units','normalized');
+% colormap(rgb)
+% %hCB = colorbar('east');
+% caxis([0, 10^14]);
+% % colormap jet
+%  hCB = colorbar('north');
+% % caxis([0, 1]);
+% set(gca,'Visible',false)
+% hCB.Position = [0.15 0.3 0.74 0.4];
+% hf.Position(4) = 0.1000;
+% hCB.Label.FontSize = 18;
+% hCB.Label.FontWeight = 'bold';
+
+% Save maps
+V_corr_map=V_atlas;
+
+if strcmp(micro_parameter,'fsoma')
+    V_corr_CMRO2vsfsoma_map=V_corr_map;
+    labels_accepted_CMRO2vsfsoma_map=labels_final_accepted;
+    z_accepted_CMRO2vsfsoma_map=z_accepted;
+    save("/media/nas_rete/Work_manuela/EMI_model-main/plots/260630/CMRO2vsfsoma_BNFcorrected.mat","V_corr_CMRO2vsfsoma_map","labels_accepted_CMRO2vsfsoma_map","z_accepted_CMRO2vsfsoma_map")
+elseif strcmp(micro_parameter,'Rsoma')
+    V_corr_CMRO2vsrsoma_map=V_corr_map;
+    labels_accepted_CMRO2vsrsoma_map=labels_final_accepted;
+    z_accepted_CMRO2vsrsoma_map=z_accepted;
+    save("/media/nas_rete/Work_manuela/EMI_model-main/plots/260630/CMRO2vsrsoma_BNFcorrected.mat","V_corr_CMRO2vsrsoma_map","labels_accepted_CMRO2vsrsoma_map","z_accepted_CMRO2vsrsoma_map")
+elseif strcmp(micro_parameter,'fsup')
+    V_corr_CMRO2vsfsup_map=V_corr_map;
+    labels_accepted_CMRO2vsfsup_map=labels_final_accepted;
+    z_accepted_CMRO2vsfsup_map=z_accepted;
+    save("/media/nas_rete/Work_manuela/EMI_model-main/plots/260630/CMRO2vsSAD_BNFcorrected.mat","V_corr_CMRO2vsfsup_map","labels_accepted_CMRO2vsfsup_map","z_accepted_CMRO2vsfsup_map")
+elseif strcmp(micro_parameter,'fc')
+    V_corr_CMRO2vsfc_map=V_corr_map;
+    labels_accepted_CMRO2vsfc_map=labels_final_accepted;
+    z_accepted_CMRO2vsfc_map=z_accepted;
+    save("/media/nas_rete/Work_manuela/EMI_model-main/plots/260630/CMRO2vsND_BNFcorrected.mat","V_corr_CMRO2vsfc_map","labels_accepted_CMRO2vsfc_map","z_accepted_CMRO2vsfc_map")
+end
+
+%%%% test that labels_accepted are all cortical regions
+
+% labels_tot_accepted = cat(2,labels_accepted_CMRO2vsfc_map,labels_accepted_CMRO2vsfsup_map,labels_accepted_CMRO2vsrsoma_map,labels_accepted_CMRO2vsfsoma_map);
+% labels_tot_accepted_unique = unique(labels_tot_accepted);
+% 
+% test_labels = setdiff(labels_tot_accepted_unique,cortical_regions);
+% 
+% if isempty(test_labels)
+%     disp("Test passed: only cortical regions have been considered")
+% else
+%     disp("Test failed: you are not considering only cortical regions")
+% end
+
+%%
+% img_path_T1MNI='/usr/local/fsl/data/standard/MNI152_T1_2mm_brain.nii.gz';
+% 
+% V_vol_T1MNI = spm_vol(img_path_T1MNI);
+% V_T1MNI=spm_read_vols(V_vol_T1MNI);
+% 
+% hdr=niftiinfo(img_path_T1MNI);
+% hdr.Datatype = 'double';
+% hdr.ImageSize = size(V_corr_CMRO2vsfsoma_map);
+% 
+% niftiwrite(V_corr_CMRO2vsfsoma_map,'/media/nas_rete/Work_manuela/EMI_model-main/plots/260620/V_corr_CMRO2vsfsoma_map.nii.gz',hdr,"Compressed",true);
+
+%% across subjs (GM median)
+% ONLY CORTICAL REGIONS
+
+disp('GLM across subjects, considering Grey Matter median values')
+
+if strcmp(micro_parameter,'fsup')
+    medians_microparameter = medians_fsup_GM_cortical_dwi_subjs;
+elseif strcmp(micro_parameter,'fc')
+    medians_microparameter = medians_fc_GM_cortical_dwi_subjs;
+elseif strcmp(micro_parameter,'fsoma')
+    medians_microparameter = medians_fsoma_GM_cortical_dwi_subjs;
+elseif strcmp(micro_parameter,'Rsoma')
+    medians_microparameter = medians_rsoma_GM_cortical_dwi_subjs;
+end
+
+%% 
+%zscore variables
+
+medians_dwi_scored = nanzscore(medians_microparameter);
+
+%load and zscore
+means_pve_0_dwi_scored = nanzscore(means_pve_0_dwi_GM_cortical_subjs);
+means_pve_2_dwi_scored = nanzscore(means_pve_2_dwi_GM_cortical_subjs);
+medians_energy_scored = nanzscore(medians_CMRO2_GM_cortical_subjs);
+
+%%
+%check pve influence
+medians_dwi_scored_tr = medians_dwi_scored';
+means_pve_0_dwi_scored_tr = means_pve_0_dwi_scored';
+means_pve_2_dwi_scored_tr = means_pve_2_dwi_scored';
+medians_energy_scored_tr = medians_energy_scored';
+
+if strcmp(micro_parameter,'fc')
+    tbl=table(medians_energy_scored_tr,medians_dwi_scored_tr,means_pve_0_dwi_scored_tr,means_pve_2_dwi_scored_tr, 'VariableNames', ...
+        {'CMRO2','fc','pve_0_dwi','pve_2_dwi'});
+    %build your model
+    mdl=fitlm(tbl,'CMRO2 ~ fc + pve_0_dwi + pve_2_dwi','RobustOpts','on')
+    % mdl=fitlm(tbl,'CMRO2 ~ fc','RobustOpts','on')
+    % mdl=fitlm(tbl,'CMRO2 ~ fsup','RobustOpts','off')
+elseif strcmp(micro_parameter,'fsup')
+    tbl=table(medians_energy_scored_tr,medians_dwi_scored_tr,means_pve_0_dwi_scored_tr,means_pve_2_dwi_scored_tr, 'VariableNames', ...
+        {'CMRO2','fsup','pve_0_dwi','pve_2_dwi'});
+    %build your model
+    mdl=fitlm(tbl,'CMRO2 ~ fsup + pve_0_dwi + pve_2_dwi','RobustOpts','on')
+    % mdl=fitlm(tbl,'CMRO2 ~ fsup','RobustOpts','on')
+    % mdl=fitlm(tbl,'CMRO2 ~ fsup','RobustOpts','off')
+elseif strcmp(micro_parameter,'fsoma')
+    tbl=table(medians_energy_scored_tr,medians_dwi_scored_tr,means_pve_0_dwi_scored_tr,means_pve_2_dwi_scored_tr, 'VariableNames', ...
+        {'CMRO2','fsoma','pve_0_dwi','pve_2_dwi'});
+    %build your model
+    mdl=fitlm(tbl,'CMRO2 ~ fsoma + pve_0_dwi + pve_2_dwi','RobustOpts','on')
+    % mdl=fitlm(tbl,'CMRO2 ~ fsup','RobustOpts','on')
+    % mdl=fitlm(tbl,'CMRO2 ~ fsup','RobustOpts','off')
+elseif strcmp(micro_parameter,'Rsoma')
+    tbl=table(medians_energy_scored_tr,medians_dwi_scored_tr,means_pve_0_dwi_scored_tr,means_pve_2_dwi_scored_tr, 'VariableNames', ...
+        {'CMRO2','Rsoma','pve_0_dwi','pve_2_dwi'});
+    %build your model
+    mdl=fitlm(tbl,'CMRO2 ~ Rsoma + pve_0_dwi + pve_2_dwi','RobustOpts','on')
+    
+end
+
+%% method I
+%calculate cmro2 regressed using zscored results and 
+%then transform back to the original units
+
+%this is the method used for the paper analysis
+
+coeffs_mat=table2array(mdl.Coefficients);
+estimate_pve_0=coeffs_mat(3,1);
+estimate_pve_2=coeffs_mat(4,1);
+
+%regress out
+y_pve_0_dwi = means_pve_0_dwi_scored.*estimate_pve_0;
+y_pve_2_dwi = means_pve_2_dwi_scored.*estimate_pve_2;
+cmro2_regressed_scored = medians_energy_scored-y_pve_0_dwi-y_pve_2_dwi;
+
+%trasform zscored y variable back to original units
+
+cmro2_regressed = cmro2_regressed_scored.*std(medians_CMRO2_GM_subjs)+mean(medians_CMRO2_GM_subjs);
+
+
+%%
+% [r,p] = corrcoef(cmro2_regressed, medians_micro_parameter_vec,'rows','complete');
+
+y=cmro2_regressed;
+x=medians_microparameter;
+% Fit a quadratic equation
+[pol,S] = polyfit(x, y, 1); %to plot the linear model I use this function
+% Evaluate the fitted polynomial
+y_fit = polyval(pol, x);
+% Calculate the R-squared value
+Rsquared = 1 - sum((y - y_fit).^2) / sum((y - nanmean(y)).^2);
+
+
+alpha = 0.05; % Significance level
+[y_fit,delta] = polyconf(pol,x,S,'alpha',alpha);
+
+[x_sorted,index] = sortrows(x');
+y_fit=y_fit';
+delta = delta';
+y_fit_sorted = y_fit(index);
+delta_sorted = delta(index);
+
+[r,p] = corrcoef(medians_microparameter,cmro2_regressed,'rows','complete');
+
+corr_coef_str = num2str(round(r(2),2));
+pvalue_str = num2str(round(p(2),2));
+
+figure, 
+s=plot(medians_microparameter,cmro2_regressed,'.',MarkerSize=25);
+%plot confidence interval shadow
+x_patch = x_sorted;
+y_patch_lower = y_fit_sorted-delta_sorted;
+y_patch_higher = y_fit_sorted+delta_sorted;
+
+x_all = [x_patch; flipud(x_patch)];
+y_all = [y_patch_higher; flipud(y_patch_lower)];
+
+patch(x_all,y_all,'cyan','FaceAlpha',0.1,'EdgeColor','none')
+
+hold on
+plot(x_sorted,y_fit_sorted,'--','LineWidth',3,'Color',"#000000");
+hold on
+plot(x_sorted,y_fit_sorted-delta_sorted,'--',x_sorted,y_fit_sorted+delta_sorted,'--','LineWidth',1.5,'Color',[0.5 0.5 0.5])
+
+set(get(gca, 'XAxis'), 'FontWeight', 'bold','FontSize',14);
+set(get(gca, 'YAxis'), 'FontWeight', 'bold','FontSize',14);
+set(gca,'box','off')
+
+xlabel(strcat(micro_parameter_name,unit_of_measure_dwi),'FontSize',19,'FontWeight','bold','FontName','Calibri');
+ylabel(strcat('CMRO_2',unit_of_measure_energy),'FontSize',19,'FontWeight','bold','FontName','Calibri');
+title(strcat('CMRO_2 vs ',micro_parameter_name),'FontSize',19,'FontWeight','bold','FontName','Calibri')
+s.Color='b';
+
+x0=50;
+y0=50;
+width=650;%550;
+height=500;%450;
+if p(2)<0.05 && p(2)>0.01    
+    txt = {strcat('r= ',corr_coef_str,'*')};
+elseif p(2)<0.01 && p(2)>0.001   
+    txt = {strcat('r= ',corr_coef_str,'**')};
+elseif p(2)<0.001
+    txt = {strcat('r= ',corr_coef_str,'***')};
+elseif p(2)>0.05
+        txt = {strcat('r= ',corr_coef_str,'')};
+end
+if strcmp(micro_parameter,'Rsoma')
+    text(9.5,100,txt,'FontWeight', 'Bold','FontSize',18);
+elseif strcmp(micro_parameter,'fsoma')
+    text(0.45,100,txt,'FontWeight', 'Bold','FontSize',18);
+elseif strcmp(micro_parameter,'fsup')
+    text(1.5*100,100,txt,'FontWeight', 'Bold','FontSize',18);
+elseif strcmp(micro_parameter,'fc')
+    text(1.5*10^5,100,txt,'FontWeight', 'Bold','FontSize',18);
+end
+set(gcf,'position',[x0,y0,width,height]);
+ylim([40,200]);
+grid on
+
+ 
