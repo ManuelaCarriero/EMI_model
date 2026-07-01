@@ -7,7 +7,9 @@ mse_threshold = 'yes';%no
 mse_threshold_value=85;
 
 root_path = '/media/nas_rete/Work_manuela'; %'/home/c25078236/Desktop';% /media/nas_rete/Work_manuela;
-%for the moment you have to change the paths to the data
+%root_path is the path to the data that depends on the computer
+%if you want to change only the root_path, follow the order of folders
+%and names of data as indicated in the following paths.
 
 %pve_1 = GM,
 %pve_0 = CSF,
@@ -535,7 +537,7 @@ title('Superficial Soma Density map')
 
 %%  Count total number of regions
 % img_path_atlas='/storage/shared/Atlas/AAL3v1_2mm_resampled.nii.gz';
-img_path_atlas=strcat(root_path,'/WAND_data/AAL3/AAL3v1_1mm.nii.gz');
+img_path_atlas=strcat(root_path,'/WAND_data/AAL3/AAL3v1_2mm.nii.gz');
 Vhdr = spm_vol(img_path_atlas);
 V_atlas_tot = spm_read_vols(Vhdr);
 
@@ -554,6 +556,9 @@ V_atlas_glass = spm_read_vols(Vhdr);
 
 %% create cortical regions mask
 cortical_regions = load(strcat(root_path,'/WAND_data/AAL_cortical_labels.txt'));
+cortical_regions(cortical_regions==35)=[];
+cortical_regions(cortical_regions==36)=[];
+
 
 V_atlases_cortical_dwi = {};
 
@@ -585,10 +590,40 @@ for subj = 1 : length(subjects)
     V_atlases_cortical_func{end+1}=V_atlas_cortical;
 end
 
-% %check
+% %%%%%check
+% %test if there are subcortical regions remaining 
+% %for at least the first subject
+% 
+% subcortical_regions = load(strcat(root_path,'/WAND_data/AAL_subcortical_labels.txt'));
+% 
+% n_subcortical=ismember(V_atlases_cortical_dwi_1,subcortical_regions);
+% sum(n_subcortical,"all");
+% 
+% if sum_test1==0
+%     disp("test1 passed: subcortical regions successfully removed")
+% else
+%     disp("test1 failed: still subcortical regions in the map")
+% end
+% 
+% %test if there are subcortical regions in the original atlas
+% n_subcortical=ismember(V_atlases_dwi_1,subcortical_regions);
+% sum_test2=sum(n_subcortical,"all");
+% 
+% 
+% if sum_test2>0
+%     disp("test2 passed: the original atlas had subcortical regions which are successfully removed")
+% else
+%     disp("test2 failed: the original atlas did not have subcortical regions.")
+% end
+% 
+% %compare visually them
 % V_atlases_cortical_dwi_1 = V_atlases_cortical_dwi{1};
 % figure,
-% imagesc(V_atlases_cortical_dwi_1(:,:,33))
+% imagesc(V_atlases_cortical_dwi_1(:,:,20))
+% 
+% V_atlases_dwi_1 = V_atlases_dwi{1};
+% figure,
+% imagesc(V_atlases_dwi_1(:,:,20))
 
 %% compute medians 
 %prepare empty matrices with maximum size 
