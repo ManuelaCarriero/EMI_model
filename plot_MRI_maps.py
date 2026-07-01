@@ -211,3 +211,56 @@ for l in cbar.ax.yaxis.get_ticklabels():
 
 plt.show()
 fig.savefig("all_MRIparametric_maps_withoutT1.svg",format="svg")
+
+#%%
+
+
+# Plot orthographic slices (x, y, z) with a customized colormap and threshold
+display = plotting.plot_stat_map(
+    stat_map_img="median_cmro2.nii.gz",
+    bg_img="MNI152_T1_2mm_brain.nii.gz", # Optional, uses MNI152 if None
+    threshold=None, # Set to your desired minimum value to hide noise
+    cmap="viridis", # A good default for continuous parametric maps
+    display_mode="ortho",
+    colorbar=False
+)
+
+#%%
+plt.rcParams.update({'font.weight':'bold'})
+
+fig=plotting.plot_img("median_cmro2.nii.gz",black_bg=True,colorbar=True,cmap='inferno',cbar_tick_format=ticker.FuncFormatter(fmt),draw_cross=False,cut_coords= [5, -26, 35],title="$CMRO_{2}$")
+fig.savefig("CMRO2.svg",dpi=600)
+# display.title(size=26)
+
+fig=plotting.plot_img("median_Rsoma.nii.gz",black_bg=True,colorbar=True,cmap='nipy_spectral',draw_cross=False,cut_coords= [5, -26, 35],vmin=6,vmax=10,title="$R_{soma}$")
+fig.savefig("Rsoma.svg",dpi=600)
+
+fig=plotting.plot_img("median_fsoma.nii.gz",black_bg=True,colorbar=True,cmap='gnuplot',draw_cross=False,cut_coords= [5, -26, 35],title='$f_{soma}$')
+fig.savefig("fsoma.svg",dpi=600)
+
+fig=plotting.plot_img("median_fsup.nii.gz",black_bg=True,colorbar=True,cmap='gnuplot2',cbar_tick_format=ticker.FuncFormatter(fmt),draw_cross=False,cut_coords= [5, -26, 35],vmax=210,title='SAD')
+fig.savefig("SAD.svg",dpi=600)
+
+fig=plotting.plot_img("median_fc.nii.gz",black_bg=True,colorbar=True,cmap='cubehelix',cbar_tick_format=ticker.FuncFormatter(fmt),draw_cross=False,cut_coords= [5, -26, 35],vmin=2*10**4,vmax=0.2*10**6,title='ND')
+fig.savefig("ND.svg",dpi=600)
+
+#%%
+
+plotting.plot_stat_map("median_cmro2.nii.gz",display_mode='z')
+
+plotting.plot_prob_atlas("median_cmro2.nii.gz")
+
+#%%
+import pylab as pl
+import numpy as np
+
+plt.style.use('dark_background')
+
+a = np.array([[0,1]])
+fig=pl.figure(figsize=(1.5, 9))
+img = pl.imshow(a, cmap="nipy_spectral")
+pl.gca().set_visible(False)
+cax = pl.axes([0.1, 0.2, 0.8, 0.6])
+cbar=pl.colorbar(orientation="vertical", cax=cax)
+cbar.set_ticks([])
+fig.savefig("nipyspectral_colorbar.svg",dpi=600)
