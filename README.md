@@ -19,6 +19,6 @@ You must run programmes in the following order:
        1. for each region: it computes the brain correlation map (i.e. correlation value for each brain region);
        2. GLM considering GM medians of each subject as samples.
 4. **analyze_subset_of_medians.m**: this programme does the same job of analyze_medians.m, but applied only to cortical or subcortical regions.
-5. **analyze_medians_partII.m**.
+5. **analyze_medians_partII.m**: this programme makes the analysis to investigate the relationships between soma density parameters.
 6. **collocate_medians**.
 7. **plot_MRI_maps.py**.
