@@ -4,7 +4,7 @@ This repository stores processing codes for the brain energy consumption vs micr
 ## HOW TO USE
 git clone https://github.com/ManuelaCarriero/EMI_model/tree/main or download the repository.
 
-## main "parts of the body of the project"
+## main parts
 
 You must run programmes in the following order:
 
