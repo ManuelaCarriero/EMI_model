@@ -32,7 +32,7 @@ pve_2_threshold_dwi=1;
 
 %% set rsoma limit for fc and fsup calculation
 
-rsoma_upper_limit=7; %7 micrometer is good for WAND data.%11.1 for Chieti
+rsoma_upper_limit=4; %7 micrometer is good for WAND data.%11.1 for Chieti
 %lower values of Rsoma would lead to infinite values of fc and fsup
 
 %% load data
@@ -361,12 +361,12 @@ for i = 1:n_subjs
     V_pve_1_dwi = V_pves_1_dwi{i};
     V_pve_2_dwi = V_pves_2_dwi{i};
 
-%if wand data, don't remove rsomas (only for plotting)
-    for i = 1:length(V_rsoma(:))%V_rsoma_maps(:)
-        if V_rsoma(i) < rsoma_upper_limit 
-            V_rsoma(i)=0;
-        end
-    end
+% %if wand data, don't remove rsomas (only for plotting)
+%     for i = 1:length(V_rsoma(:))%V_rsoma_maps(:)
+%         if V_rsoma(i) < rsoma_upper_limit 
+%             V_rsoma(i)=0;
+%         end
+%     end
     
     V_pve_1_dwi(V_pve_1_dwi>pve_1_threshold)=1;
     V_pve_1_dwi(V_pve_1_dwi<1)=0;
@@ -410,12 +410,13 @@ for i = 1:n_subjs
     if strcmp(rois,'complete')
         V_rsoma_masked = V_rsoma.*V_fsoma_to_mask;
     else
-        V_rsoma_masked = V_rsoma.*V_fsoma_to_mask.*V_GM; 
+        V_rsoma_masked = V_rsoma.*V_GM; %*V_fsoma_to_mask.
     end 
 
     %convert to mm^3
     V_rsoma_masked = V_rsoma_masked.*10^-6.*10^3;
-    
+%     V_rsoma_masked = V_rsoma.*10^-6.*10^3;  
+
     %voxel wise divide fs map over 4/3pir^3
     fc_map = V_fsoma./((4/3)*pi*V_rsoma_masked.^3);
     %figure, imagesc(fc_map(:,:,45));
@@ -433,8 +434,13 @@ end
 fc_1=V_fc_maps{1};
 figure, imagesc(rot90(fc_1(:,:,33)))
 title('Numerical soma density')
-% clim([10^12,10^14])
+%clim([10^12,10^14])
+% clim([0,10^6])
 
+% fc_1=fc_1(:);
+% fc_1(isnan(fc_1))=[];
+% figure, hist(fc_1(:)>10^4)
+% nanmin(fc_1(:))
 %a further method to remove hyperintensities (mainly at the borders): look at the MSE.
 %% save fc of one subj as nifti
 % img_path='/home/c25078236/Desktop/WAND_data/DWI/SANDI_MAPS/sub-97902/SANDI_Output/SANDI-fit_Rsoma.nii.gz';
@@ -457,12 +463,12 @@ for i = 1:n_subjs
     V_pve_1_dwi = V_pves_1_dwi{i};
     V_pve_2_dwi = V_pves_2_dwi{i};
 
-%if wand data, don't remove rsomas    
-    for i = 1:length(V_rsoma(:))
-        if V_rsoma(i) < rsoma_upper_limit
-            V_rsoma(i)=0;
-        end
-    end
+% % %if wand data, don't remove rsomas    
+%     for i = 1:length(V_rsoma(:))
+%         if V_rsoma(i) < rsoma_upper_limit
+%             V_rsoma(i)=0;
+%         end
+%     end
     
     V_pve_1_dwi(V_pve_1_dwi>pve_1_threshold)=1;
     V_pve_1_dwi(V_pve_1_dwi<1)=0;
@@ -506,11 +512,12 @@ for i = 1:n_subjs
     if strcmp(rois,'complete')
         V_rsoma_masked = V_rsoma.*V_fsoma_to_mask;
     else
-        V_rsoma_masked = V_rsoma.*V_fsoma_to_mask.*V_GM; 
+        V_rsoma_masked = V_rsoma.*V_GM; %.*V_fsoma_to_mask
     end
 
     %convert to mm^3
-    V_rsoma_masked = V_rsoma_masked.*10^-6.*10^3;    
+    V_rsoma_masked = V_rsoma_masked.*10^-6.*10^3;  
+%     V_rsoma_masked = V_rsoma.*10^-6.*10^3;
 
     %voxel wise divide fs map over 4/3pir^3
     fsup_map = V_fsoma./V_rsoma_masked;
@@ -554,10 +561,13 @@ V_atlas_glass = spm_read_vols(Vhdr);
 %% in case you don't have the original atlas
 % n_regions=166;%it is needed to built the empty matrix (you need to know the maximum length. If it's higher, it isn't a problem).
 
-%% create cortical regions mask
+%% create cortical regions mask 
+% this is to create the Grey Matter mask with only cortical regions
+
 cortical_regions = load(strcat(root_path,'/WAND_data/AAL_cortical_labels.txt'));
 cortical_regions(cortical_regions==35)=[];
 cortical_regions(cortical_regions==36)=[];
+
 
 
 V_atlases_cortical_dwi = {};
@@ -593,11 +603,12 @@ end
 % %%%%%check
 % %test if there are subcortical regions remaining 
 % %for at least the first subject
+% V_atlases_cortical_dwi_1 = V_atlases_cortical_dwi{1};
 % 
 % subcortical_regions = load(strcat(root_path,'/WAND_data/AAL_subcortical_labels.txt'));
 % 
 % n_subcortical=ismember(V_atlases_cortical_dwi_1,subcortical_regions);
-% sum(n_subcortical,"all");
+% sum_test1=sum(n_subcortical,"all");
 % 
 % if sum_test1==0
 %     disp("test1 passed: subcortical regions successfully removed")
@@ -606,6 +617,8 @@ end
 % end
 % 
 % %test if there are subcortical regions in the original atlas
+% V_atlases_dwi_1 = V_atlases_dwi{1};
+% 
 % n_subcortical=ismember(V_atlases_dwi_1,subcortical_regions);
 % sum_test2=sum(n_subcortical,"all");
 % 
@@ -617,11 +630,9 @@ end
 % end
 % 
 % %compare visually them
-% V_atlases_cortical_dwi_1 = V_atlases_cortical_dwi{1};
 % figure,
 % imagesc(V_atlases_cortical_dwi_1(:,:,20))
 % 
-% V_atlases_dwi_1 = V_atlases_dwi{1};
 % figure,
 % imagesc(V_atlases_dwi_1(:,:,20))
 
@@ -655,6 +666,9 @@ percentage_zeros_CMRO2_subjs = zeros(n_subjs,n_regions);
 % percentage_unphysical_CBF_subjs = zeros(n_subjs,n_regions); 
 percentage_nans_CMRO2_subjs = zeros(n_subjs,n_regions);
 % percentage_nans_CBF_subjs = zeros(n_subjs,n_regions); 
+
+%these are different because if you mask Rsoma using fsoma,
+%Rsoma and the other microstructural parametric maps have different voxels
 percentage_high_MSE_microparameter_subjs = zeros(n_subjs,n_regions); 
 percentage_high_MSE_rsoma_subjs = zeros(n_subjs,n_regions);
 
@@ -663,6 +677,7 @@ medians_mse_subjs = zeros(n_subjs,n_regions); %MSE
 medians_mse_rsoma_subjs = zeros(n_subjs,n_regions); %MSE
 
 percentage_nans_rsoma_subjs = zeros(n_subjs,n_regions);
+%theoretically zero it is a zero values array
 
 V_pve_0_func_mean_subjs = zeros(n_subjs,n_regions);
 V_pve_1_func_mean_subjs = zeros(n_subjs,n_regions);
@@ -672,6 +687,8 @@ V_pve_0_dwi_mean_subjs = zeros(n_subjs,n_regions);
 V_pve_1_dwi_mean_subjs = zeros(n_subjs,n_regions);
 V_pve_2_dwi_mean_subjs = zeros(n_subjs,n_regions);
 
+%in case Rsoma is masked with fsoma, pve associated to Rsoma will be
+%different
 V_pve_0_dwi_fs_mean_subjs = zeros(n_subjs,n_regions);
 V_pve_1_dwi_fs_mean_subjs = zeros(n_subjs,n_regions);
 V_pve_2_dwi_fs_mean_subjs = zeros(n_subjs,n_regions);
@@ -695,7 +712,7 @@ means_pve_0_func_GM_subjs = [];
 means_pve_1_func_GM_subjs = [];
 means_pve_2_func_GM_subjs = [];
 
-means_pve_0_dwi_GM_subjs = []; %attention: if you want the same analysis also for Rsoma, you have to consider .V_GM.*V_fs 
+means_pve_0_dwi_GM_subjs = []; %if you mask Rsoma by fsoma, you have different pves
 means_pve_1_dwi_GM_subjs = [];
 means_pve_2_dwi_GM_subjs = [];
 
@@ -722,7 +739,7 @@ means_pve_1_dwi_GM_cortical_subjs = [];
 means_pve_2_dwi_GM_cortical_subjs = [];
 
 %%check
-V_rsoma_GM_masked_subjs = zeros(n_subjs,SANDI_map_size);
+% V_rsoma_GM_masked_subjs = zeros(n_subjs,SANDI_map_size);
 
 start_time=tic;
 for subj = 1:n_subjs
@@ -1150,10 +1167,11 @@ for subj = 1:n_subjs
         idx_high_MSE_micropar=find(V_MSE_masked>prctile(V_MSE_masked,mse_threshold_value)); %MSE
         idx_high_MSE_rsoma=find(V_MSE_masked_rsoma>prctile(V_MSE_masked_rsoma,mse_threshold_value)); %MSE
 
-        %COUNT THE PERCENTAGE
-        percentage_high_MSE_rsoma = numel(idx_high_MSE_rsoma)/numel(V_rsoma_masked); %MSE
-
-        percentage_high_MSE_micropar = numel(idx_high_MSE_micropar)/numel(V_fsoma_masked); %MSE
+%         % test 
+%         % COUNT THE PERCENTAGE (it should be the remaining 15%)
+%         percentage_high_MSE_rsoma = numel(idx_high_MSE_rsoma)/numel(V_rsoma_masked); %MSE
+% 
+%         percentage_high_MSE_micropar = numel(idx_high_MSE_micropar)/numel(V_fsoma_masked); %MSE
 
         %REMOVE THEM
         V_rsoma_masked(idx_high_MSE_rsoma)=[]; %MSE
@@ -1214,8 +1232,9 @@ for subj = 1:n_subjs
         medians_mse_subj(end+1) = nanmedian(V_MSE_masked); %MSE
         medians_mse_rsoma_subj(end+1) = nanmedian(V_MSE_masked_rsoma); %MSE
 
-        percentage_high_MSE_microparameter_subj(end+1) = percentage_high_MSE_micropar; %MSE
-        percentage_high_MSE_rsoma_subj(end+1) = percentage_high_MSE_rsoma; %MSE
+%       %test
+%       percentage_high_MSE_microparameter_subj(end+1) = percentage_high_MSE_micropar; %MSE
+%       percentage_high_MSE_rsoma_subj(end+1) = percentage_high_MSE_rsoma; %MSE
     end
 
     %calculate PVE regional means
@@ -1286,9 +1305,9 @@ for subj = 1:n_subjs
     if strcmp(mse_threshold,'yes')
         medians_mse_rsoma_subjs(subj,1:n_regions_dwi)=medians_mse_rsoma_subj; %MSE
         medians_mse_subjs(subj,1:n_regions_dwi)=medians_rsoma_subj; %MSE
-        percentage_high_MSE_microparameter_subjs(subj,1:n_regions_dwi) = percentage_high_MSE_microparameter_subj; %MSE
-        percentage_high_MSE_rsoma_subjs(subj,1:n_regions_dwi) = percentage_high_MSE_rsoma_subj; %MSE
-        
+%         percentage_high_MSE_microparameter_subjs(subj,1:n_regions_dwi) = percentage_high_MSE_microparameter_subj; %MSE
+%         percentage_high_MSE_rsoma_subjs(subj,1:n_regions_dwi) = percentage_high_MSE_rsoma_subj; %MSE
+%         
     end
 
     percentage_nans_rsoma_subjs(subj,1:n_regions_dwi)=percentage_nans_rsoma_subj;
@@ -1485,7 +1504,7 @@ for subj = 1:n_subjs
     means_pve_2_dwi_GM_cortical_subjs(end+1) = mean(V_pve_2_dwi_masked_GM_cortical(:));
 
     %%check
-    V_rsoma_GM_masked_subjs(subj,1:numel(V_rsoma_GM_masked)) = V_rsoma_GM_masked;
+%     V_rsoma_GM_masked_subjs(subj,1:numel(V_rsoma_GM_masked)) = V_rsoma_GM_masked;
     
     toc
     disp(strcat('Finished subject', num2str(subj),'Starting subject', num2str(subj+1)))
