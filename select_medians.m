@@ -3,50 +3,24 @@
 %have lost some labels, so this programme select only common labels).
 
 %% HOW TO USE
-%the code must be run 4 times:
-%one selecting Rsoma, one selecting fsoma, one selecting fsup
-%and one selecting fc.
+
+%choose the name of the folder where you want the data to be saved
+name_folder = '261018_PROOF/';%'261006_removing_upperlimit_fsomamasking/';%'261005/';%'260904/';%use the format "date_info/"
 
 %% load data already "cooked"
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/251124/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions')
-% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions_andfromGM.mat')
-% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_removingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
 
-% load('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_NOTremovingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
-% load('/home/c25078236/Desktop/saved_workspace/results_cubric/with_mse/260531/CORRECTEDRIGHTDWIREGIONS_maskingGM05_fc_fsup_mse85_withGMmedians_GMpvemeans_withoutfsmasking_nvoxels_NOTremovingzerosfromcmro2regions_andfromGM_withrsomaGMmaskedvoxels.mat')
-
-% load('/home/c25078236/Desktop/saved_workspace/programmi/data/computed_with_wholeGMcorticalmedians.mat')
-%% select variables to examine
-energy_parameter = 'CMRO2';
-micro_parameter = 'fc';
+load('/media/nas_rete/Work_manuela/EMI_model-main/computed_data.mat')
 
 %% remove uncommon labels between subjects and between spaces
 %% select matrices
 
-if strcmp(micro_parameter,'Rsoma')
-    medians_dwi_subjs = medians_rsoma_subjs;
-elseif strcmp(micro_parameter,'fsoma')
-    medians_dwi_subjs = medians_fsoma_subjs;
-elseif strcmp(micro_parameter,'fsup')
-    medians_dwi_subjs = medians_fsup_subjs;
-elseif strcmp(micro_parameter,'fc')
-    medians_dwi_subjs = medians_fc_subjs;
-end
+%func
+medians_func_subjs = medians_CMRO2_subjs;
+percentage_removal_func_subjs = percentage_zeros_CMRO2_subjs;
+percentage_nans_func_subjs = percentage_nans_CMRO2_subjs;
 
+%%dwi
 
-if strcmp(energy_parameter,'CMRO2')
-    medians_func_subjs = medians_CMRO2_subjs;
-    percentage_removal_func_subjs = percentage_zeros_CMRO2_subjs;
-    percentage_nans_func_subjs = percentage_nans_CMRO2_subjs;
-elseif strcmp(energy_parameter,'CBF')
-    medians_func_subjs = medians_CBF_subjs;
-    percentage_removal_func_subjs = percentage_removal_CBF_subjs;
-    percentage_nans_func_subjs = percentage_removal_CBF_subjs;
-end
-
-%%
 medians_dwi_allpar = {medians_rsoma_subjs,medians_fsoma_subjs,medians_fsup_subjs,medians_fc_subjs};
 
 %% The following blocks are to select common regions
@@ -150,47 +124,29 @@ for row = 1:n_subjs
     n_voxels_dwi_final(row,:)=n_voxels_dwi_row_final;
 end
 
-%% if you want to analyze SANDI MSE
+% %% if you want to analyze SANDI MSE
 % %these matrices are needed to check if at higher variability correspond
 % %high mse median regional values.
 % 
-% if strcmp(micro_parameter,'Rsoma')    
-%     medians_mse_rsoma_subjs_final=[];
-%     for row = 1:n_subjs
-%         medians_mse_rsoma_subjs_row=medians_mse_rsoma_subjs(row,:);
-%         lst_idx = lst_idx_matrix_dwi(row,:);
-%         medians_mse_rsoma_subjs_row_final=medians_mse_rsoma_subjs_row(lst_idx);
-%         medians_mse_rsoma_subjs_final(row,:)=medians_mse_rsoma_subjs_row_final;
-%     end
-% else
-%     medians_mse_subjs_final=[];
-%     for row = 1:n_subjs
-%         medians_mse_subjs_row=medians_mse_subjs(row,:);
-%         lst_idx = lst_idx_matrix_dwi(row,:);
-%         medians_mse_subjs_row_final=medians_mse_subjs_row(lst_idx);
-%         medians_mse_subjs_final(row,:)=medians_mse_subjs_row_final;
-%     end
+%   
+% medians_mse_rsoma_subjs_final=[];
+% for row = 1:n_subjs
+%     medians_mse_rsoma_subjs_row=medians_mse_rsoma_subjs(row,:);
+%     lst_idx = lst_idx_matrix_dwi(row,:);
+%     medians_mse_rsoma_subjs_row_final=medians_mse_rsoma_subjs_row(lst_idx);
+%     medians_mse_rsoma_subjs_final(row,:)=medians_mse_rsoma_subjs_row_final;
 % end
 % 
-% %in case you remove regions with high MSE values
-% 
-% if strcmp(micro_parameter,'rsoma')    
-%     percentage_high_MSE_rsoma_subjs_final=[];
-%     for row = 1:n_subjs
-%         percentage_high_MSE_rsoma_subjs_row=percentage_high_MSE_rsoma_subjs(row,:);
-%         lst_idx = lst_idx_matrix_dwi(row,:);
-%         percentage_high_MSE_rsoma_subjs_row_final=percentage_high_MSE_rsoma_subjs_row(lst_idx);
-%         percentage_high_MSE_rsoma_subjs_final(row,:)=percentage_high_MSE_rsoma_subjs_row_final;
-%     end
-% else
-%     percentage_high_MSE_microparameter_subjs_final=[];
-%     for row = 1:n_subjs
-%         percentage_high_MSE_microparameter_subjs_row=percentage_high_MSE_microparameter_subjs(row,:);
-%         lst_idx = lst_idx_matrix_dwi(row,:);
-%         percentage_high_MSE_microparameter_subjs_row_final=percentage_high_MSE_microparameter_subjs_row(lst_idx);
-%         percentage_high_MSE_microparameter_subjs_final(row,:)=percentage_high_MSE_microparameter_subjs_row_final;
-%     end
+% medians_mse_subjs_final=[];
+% for row = 1:n_subjs
+%     medians_mse_subjs_row=medians_mse_subjs(row,:);
+%     lst_idx = lst_idx_matrix_dwi(row,:);
+%     medians_mse_subjs_row_final=medians_mse_subjs_row(lst_idx);
+%     medians_mse_subjs_final(row,:)=medians_mse_subjs_row_final;
 % end
+
+
+
 
 %repeat everything for func space
 %% func space
@@ -418,42 +374,25 @@ for row = 1:n_subjs
 end
 
 
-%% if you have MSE
-% if strcmp(micro_parameter,'Rsoma')    
-%     medians_mse_rsoma_subjs_final_spaces=[];
-%     for row = 1:n_subjs
-%         medians_mse_rsoma_subjs_row=medians_mse_rsoma_subjs_final(row,:);
-%         lst_idx = lst_idx_matrix_dwi_spaces(row,:);
-%         medians_mse_rsoma_subjs_row_final=medians_mse_rsoma_subjs_row(lst_idx);
-%         medians_mse_rsoma_subjs_final_spaces(row,:)=medians_mse_rsoma_subjs_row_final;
-%     end
-% else
-%     medians_mse_subjs_final_spaces=[];
-%     for row = 1:n_subjs
-%         medians_mse_subjs_row=medians_mse_subjs_final(row,:);
-%         lst_idx = lst_idx_matrix_dwi_spaces(row,:);
-%         medians_mse_subjs_row_final=medians_mse_subjs_row(lst_idx);
-%         medians_mse_subjs_final_spaces(row,:)=medians_mse_subjs_row_final;
-%     end
+% %% if you have MSE
+%  
+% medians_mse_rsoma_subjs_final_spaces=[];
+% for row = 1:n_subjs
+%     medians_mse_rsoma_subjs_row=medians_mse_rsoma_subjs_final(row,:);
+%     lst_idx = lst_idx_matrix_dwi_spaces(row,:);
+%     medians_mse_rsoma_subjs_row_final=medians_mse_rsoma_subjs_row(lst_idx);
+%     medians_mse_rsoma_subjs_final_spaces(row,:)=medians_mse_rsoma_subjs_row_final;
 % end
-% %In case you remove high MSE regions
-% if strcmp(micro_parameter,'rsoma')
-%     percentage_high_MSE_rsoma_subjs_final_spaces=[];
-%     for row = 1:n_subjs
-%         percentage_high_MSE_rsoma_subjs_row=percentage_high_MSE_rsoma_subjs_final(row,:);
-%         lst_idx = lst_idx_matrix_dwi_spaces(row,:);
-%         percentage_high_MSE_rsoma_subjs_row_final=percentage_high_MSE_rsoma_subjs_row(lst_idx);
-%         percentage_high_MSE_rsoma_subjs_final_spaces(row,:)=percentage_high_MSE_rsoma_subjs_row_final;
-%     end
-% else
-%     percentage_high_MSE_microparameter_subjs_final_spaces=[];
-%     for row = 1:n_subjs
-%         percentage_high_MSE_microparameter_subjs_row=percentage_high_MSE_microparameter_subjs_final(row,:);
-%         lst_idx = lst_idx_matrix_dwi_spaces(row,:);
-%         percentage_high_MSE_microparameter_subjs_row_final=percentage_high_MSE_microparameter_subjs_row(lst_idx);
-%         percentage_high_MSE_microparameter_subjs_final_spaces(row,:)=percentage_high_MSE_microparameter_subjs_row_final;
-%     end
+% 
+% medians_mse_subjs_final_spaces=[];
+% for row = 1:n_subjs
+%     medians_mse_subjs_row=medians_mse_subjs_final(row,:);
+%     lst_idx = lst_idx_matrix_dwi_spaces(row,:);
+%     medians_mse_subjs_row_final=medians_mse_subjs_row(lst_idx);
+%     medians_mse_subjs_final_spaces(row,:)=medians_mse_subjs_row_final;
 % end
+
+
 %% func space
 
 %First, detect indices of common Elements
@@ -575,7 +514,8 @@ labels_final=labels_func_subjs_final_spaces(1,:);
 
 %%%%%%%%%%% variables to save
 
-save("/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/260617/selected_medians.mat","medians_func","means_pve_0_func","means_pve_1_func", ...
+mkdir(strcat('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/',name_folder))
+save(strcat('/media/nas_rete/Work_manuela/EMI_model-main/EMI_data/WAND/',name_folder,'/selected_medians.mat'),"medians_func","means_pve_0_func","means_pve_1_func", ...
     "means_pve_2_func","means_pve_0_dwi","means_pve_1_dwi","means_pve_2_dwi", ...
     "labels_final","medians_rsoma_subjs_final_spaces","medians_fsoma_subjs_final_spaces", ...
     "medians_fsup_subjs_final_spaces","medians_fc_subjs_final_spaces","medians_CMRO2_GM_subjs", ...
